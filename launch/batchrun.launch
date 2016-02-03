@@ -1,0 +1,7 @@
+<launch>
+    <node name="nuc" pkg="nuc" type="NUC" clear_params="true" output="screen">
+        <rosparam command="load" file="$(find nuc)/launch/batchrun_param.yaml" />
+	<param name="nuc_dir" type="string" value="$(find nuc)" /> 
+    </node>
+</launch>
+

@@ -1,0 +1,6 @@
+<launch>
+    <node name="active_survey" pkg="active_survey" type="active_survey" clear_params="true" output="screen">
+          <rosparam file="$(find active_survey)/launch/real_param.yaml" />
+    </node>
+</launch>
+
