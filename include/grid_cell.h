@@ -20,6 +20,7 @@ protected:
 
     double ground_truth_value_;
     double estimated_value_;
+    double variance_;
 };
 
 class grid_cell: grid_cell_base
@@ -42,6 +43,8 @@ public:
     inline double get_estimated_value() const {return estimated_value_;}
     inline void set_ground_truth_value(const double &v){ground_truth_value_=v;}
     inline void set_estimated_value(const double &ev){estimated_value_=ev;}
+    inline double get_variance() const {return variance_;}
+    inline void set_variance(const double &variance){variance_=variance;}
 
     inline Vector2f get_corner_ul() const { return center_+ Vector2f(-0.5*size_[0], 0.5*size_[1]);}
     inline Vector2f get_corner_ur() const { return center_+ Vector2f( 0.5*size_[0], 0.5*size_[1]);}

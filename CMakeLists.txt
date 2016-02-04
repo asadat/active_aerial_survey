@@ -17,6 +17,8 @@ set(aas_SOURCES
     src/grid_cell.cpp
     src/grid.cpp
     src/gaussian_field.cpp
+    src/sensor.cpp
+    include/sensor.h
     include/random_environment_generator.h
     include/gaussian_field.h
     include/grid_cell.h

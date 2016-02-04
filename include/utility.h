@@ -1,8 +1,9 @@
-#ifndef _UTILITY_H
-#define _UTILITY_H
+#pragma once
 
 #include <Eigen/Core>
 #include <GL/glut.h>
+
+#include "ros/ros.h"
 
 
 #define AREA(r) (fabs(r[0]-r[2]) * fabs(r[1]-r[3]))
@@ -97,5 +98,3 @@ static Vector3f get_altitude_color(const double& h)
 };
 
 }
-
-#endif

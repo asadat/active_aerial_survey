@@ -1,6 +1,6 @@
 #include "grid_cell.h"
 #include "utility.h"
-#include "ros/ros.h"
+#include "active_survey_param.h"
 
 namespace asn
 {
@@ -13,7 +13,6 @@ grid_cell::grid_cell(const Vector2f &center, const size2f &s, const grid_index &
     size_(s),
     index_(index)
 {
-    //ROS_INFO("Cell-> center:(%f,%f) index:(%d, %d)", center_[0], center_[1], index_[0], index_[1]);
 }
 
 grid_cell::~grid_cell(){}
@@ -22,20 +21,22 @@ void grid_cell::draw()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glLineWidth(1.0);
-    glColor3f(2*ground_truth_value_,2*ground_truth_value_,2*ground_truth_value_);
+    if(active_survey_param::non_ros::cell_drawing_mode == 0)
+        glColor3f(2*ground_truth_value_,2*ground_truth_value_,2*ground_truth_value_);
+    else if(active_survey_param::non_ros::cell_drawing_mode == 1)
+        glColor3f(2*estimated_value_,2*estimated_value_,2*estimated_value_);
+    else if(active_survey_param::non_ros::cell_drawing_mode == 3)
+        glColor3f(2*variance_,2*variance_,2*variance_);
+    else if(active_survey_param::non_ros::cell_drawing_mode == 4)
+        glColor3f(2*variance_,((1-variance_)<0?0:(1-variance_))*estimated_value_,2*variance_);
+
+
     glBegin(GL_QUADS);
     utility::gl_vertex2f(get_corner_ll());
     utility::gl_vertex2f(get_corner_lr());
     utility::gl_vertex2f(get_corner_ur());
     utility::gl_vertex2f(get_corner_ul());
     glEnd();
-
-//    glPointSize(2);
-//    glColor3f(0,1,0);
-//    glBegin(GL_POINTS);
-//    utility::gl_vertex2f(center_);
-//    glEnd();
-
 }
 
 }

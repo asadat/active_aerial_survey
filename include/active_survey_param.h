@@ -62,6 +62,12 @@ public:
     static double random_seed;
     static double gp_sigma;
 
+    class non_ros
+    {
+    public:
+        static int cell_drawing_mode;
+    };
+
 };
 
 }

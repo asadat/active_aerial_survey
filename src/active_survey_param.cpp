@@ -45,6 +45,8 @@ int active_survey_param::lm_tracks = 4;
 double active_survey_param::random_seed = -1;
 double active_survey_param::gp_sigma = 0.1;
 
+int active_survey_param::non_ros::cell_drawing_mode = 0;
+
 
 void active_survey_param::GetParams(ros::NodeHandle &nh)
 {
