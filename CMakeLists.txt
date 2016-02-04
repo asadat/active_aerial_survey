@@ -13,30 +13,16 @@ set(aas_LIBRARIES GL GLU glut gp)
 set(aas_SOURCES
     src/active_survey.cpp
     src/active_survey_node.cpp
-    #src/CNode.cpp
-    #src/MAV.cpp
-    #src/InterestingnessSensor.cpp
     src/active_survey_param.cpp
-    #src/SearchCoverageStrategy.cpp
-    #src/TSP.cpp
-    #src/TargetPolygon.cpp
-    #src/GraphComponents.cpp
-    #src/ScalarField.cpp
-    #src/TargetTour.cpp
-    #src/CompoundTarget.cpp
-    #include/ScalarField.h
-    #include/CompoundTarget.h
-    #include/TargetTour.h
-    #include/Knapsack.h
-    #include/GraphComponents.h
-    #include/TargetPolygon.h
-    #include/TSP.h
-    #include/SearchCoverageStrategy.h
-    #include/InterestingnessSensor.h
-    include/active_survey.h
-    #include/CNode.h
-    #include/TraversalStrategy.h
-    #include/MAV.h
+    src/environment_model.cpp
+    src/grid_cell.cpp
+    src/grid.cpp
+    src/gaussian_field.cpp
+    include/gaussian_field.h
+    include/grid_cell.h
+    include/grid.h
+    include/environment_model.h
+    include/active_survey.h    
     include/active_survey_param.h
     include/utility.h
 )

@@ -1,6 +1,7 @@
 
 #include "active_survey.h"
 #include "GL/glut.h"
+#include "environment_model.h"
 
 using namespace Eigen;
 
@@ -9,7 +10,7 @@ namespace asn
 
 FILE *active_survey::log_file_ = NULL;
 std::string active_survey::log_file_name_ = std::string("");
-active_survey * active_survey::instance_ = NULL;
+std::shared_ptr<active_survey> active_survey::instance_;
 
 active_survey::active_survey(int argc, char **argv):nh_("active_survey")
 {    
@@ -52,7 +53,7 @@ void active_survey::setup_log_file()
 
 void active_survey::draw()
 {       
-
+    environment_model::instance()->draw();
 }
 
 

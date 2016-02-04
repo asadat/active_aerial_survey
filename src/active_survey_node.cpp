@@ -12,8 +12,6 @@
 using namespace Eigen;
 using namespace asn;
 
-active_survey* active_survey_ = NULL;
-
 unsigned int update_ms = 33;
 bool do_update = false;
 bool scan_running = false;
@@ -149,15 +147,8 @@ void render_event()
             Cam_Plane[0], Cam_Plane[1], Cam_Plane[2],
             Cam_Normal[0], Cam_Normal[1], Cam_Normal[2]);
 
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   glColor3f(1,0,0);
-   glLineWidth(5);
-   glBegin(GL_QUADS);
-   glVertex2d(-1,-1);
-   glVertex2d(-1, 1);
-   glVertex2d( 1, 1);
-   glVertex2d( 1,-1);
-   glEnd();
+   active_survey::instance()->draw();
+
    glutSwapBuffers();
 }
 
@@ -287,7 +278,7 @@ int main(int argc, char ** argv)
 {
     ros::init(argc, argv, "active_survey");
     glutInit(&argc, argv);
-    active_survey_ = active_survey::instance(argc, argv);
+    std::shared_ptr<active_survey> active_survey_ = active_survey::instance(argc, argv);
 
     if(active_survey_param::bypass_controller)
     {

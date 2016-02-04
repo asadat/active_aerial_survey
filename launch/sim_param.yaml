@@ -8,7 +8,7 @@ policy: greedy
 strategy: scs
 area_length: 200.0
 area_rotation: 0.0
-logging: true
+logging: false
 log_folder: /home/abbas/ros_workspace/src/active_survey/log
 patches: 3
 percent_interesting: 50.0

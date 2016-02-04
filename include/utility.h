@@ -1,6 +1,8 @@
 #pragma  once
 
 #include <Eigen/Core>
+#include <GL/glut.h>
+
 
 #define AREA(r) (fabs(r[0]-r[2]) * fabs(r[1]-r[3]))
 
@@ -8,6 +10,26 @@ using namespace Eigen;
 
 namespace asn
 {
+
+void gl_color(const Vector3f &c)
+{
+    glColor3f(c[0], c[1], c[2]);
+}
+
+void gl_color(const Vector4f &c)
+{
+    glColor4f(c[0], c[1], c[2], c[3]);
+}
+
+void gl_vertex(const Vector2f& v)
+{
+    glVertex2f(v[0], v[1]);
+}
+
+void gl_vertex(const Vector3f& v)
+{
+    glVertex3f(v[0], v[1], v[2]);
+}
 
 Vector3f get_altitude_color(const double& h)
 {

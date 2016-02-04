@@ -5,6 +5,8 @@
 #include "Eigen/Core"
 #include "ros/ros.h"
 
+#include <memory>
+
 using namespace Eigen;
 
 namespace asn
@@ -20,11 +22,11 @@ public:
 
     ~active_survey();
 
-    static active_survey * instance(int argc=0, char **argv=NULL)
+    static std::shared_ptr<active_survey> instance(int argc=0, char **argv=NULL)
     {
-        if(instance_ == NULL)
+        if(!instance_)
         {
-            instance_ = new active_survey(argc, argv);
+            instance_ = std::shared_ptr<active_survey>(new active_survey(argc, argv));
         }
 
         return instance_;
@@ -41,7 +43,7 @@ private:
     void setup_log_file();
     Vector3f get_color(double h);
 
-    static active_survey* instance_;
+    static std::shared_ptr<active_survey> instance_;
     ros::NodeHandle nh_;
     static std::string log_file_name_;
 };
