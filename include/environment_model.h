@@ -18,6 +18,7 @@ public:
 
     ~environment_model();
 
+    void generate_environment();
     void draw();
 
 private:
@@ -26,6 +27,7 @@ private:
 
     std::shared_ptr<grid> grid_;
 
+    friend class random_environment_generator;
 };
 
 }

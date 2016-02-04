@@ -5,8 +5,7 @@ project(active_survey)
 FIND_PACKAGE(LIBGP)
 FIND_PACKAGE(Eigen3 3.0.1 REQUIRED)
 
-
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} -g -Wall")
+set(CMAKE_CXX_FLAGS "-std=c++11  ${CMAKE_CXX_FLAGS} -g -Wall")
 
 set(aas_LIBRARIES GL GLU glut gp)
 
@@ -18,6 +17,7 @@ set(aas_SOURCES
     src/grid_cell.cpp
     src/grid.cpp
     src/gaussian_field.cpp
+    include/random_environment_generator.h
     include/gaussian_field.h
     include/grid_cell.h
     include/grid.h
