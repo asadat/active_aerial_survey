@@ -25,6 +25,8 @@ protected:
 class grid_cell: grid_cell_base
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     typedef std::shared_ptr<grid_cell> ptr;
 
     grid_cell(const Vector2f &center, const size2f &s, const grid_index &index);

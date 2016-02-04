@@ -57,6 +57,7 @@ void update_event(int ms)
 
     do_update = true; // any change and we go again. If we don't change anything, we stop updating
 
+    active_survey::instance()->hanlde_key_pressed(Key, do_update);
     // actions:
     // - W or Left_Mouse = Move Forward constant rate
     // - S or Middle_Mouse = Move Backward constant rate

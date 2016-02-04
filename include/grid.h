@@ -13,6 +13,7 @@ typedef Vector2i size2i;
 class grid
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     grid(const Vector2f &center, const size2f &cell_size, const size2i &size);
 
     ~grid();
@@ -43,8 +44,8 @@ private:
     size2f cell_size_;
     size2i size_;
 
-    grid_index neighbours_idx_4[4];
-    grid_index neighbours_idx_8[8];
+    std::vector<grid_index> neighbours_idx_4;
+    std::vector<grid_index> neighbours_idx_8;
 };
 
 }

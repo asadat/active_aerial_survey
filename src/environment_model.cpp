@@ -9,8 +9,7 @@ std::shared_ptr<environment_model> environment_model::instance_;
 environment_model::environment_model()
 {
     grid_ = std::shared_ptr<grid>(new grid({0,0}, {2,2}, {100,100} ));
-
-    random_environment_generator::generate(*this, active_survey_param::random_seed, 4, active_survey_param::percent_interesting);
+    generate_environment();
 }
 
 environment_model::~environment_model(){}
@@ -23,7 +22,7 @@ void environment_model::draw()
 
 void environment_model::generate_environment()
 {
-
+    random_environment_generator::generate(*this, active_survey_param::random_seed, 4, active_survey_param::percent_interesting);
 }
 
 }

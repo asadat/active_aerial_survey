@@ -13,6 +13,9 @@ class random_environment_generator
 public:
     static void generate(environment_model &environment, const long int &seed, const int &cluster_count, const int &percent_interesting)
     {
+        ROS_WARN("random environmnet generation: seed:%ld #cluster:%d percent_interesting:%d", seed, cluster_count, percent_interesting);
+
+
         auto used_seed = seed;
 
         if(used_seed<=0)
@@ -52,24 +55,26 @@ public:
 
 
         int d=5;
-        for(int i=0; i<s[0]; i++)
+        for(auto it=environment.grid_->begin(); it != environment.grid_->end(); it++)
         {
-            for(int j=0; j<s[1]; j++)
-            {
-                double p=0;
-                int n=0;
-                for(int ii=i-d; ii <= i+d; ii++)
-                    for(int jj=j-d; jj <= j+d; jj++)
+            double p=0;
+            double n=0;
+            for(int ii=-d; ii <= d; ii++)
+                for(int jj=-d; jj <= d; jj++)
+                {
+                    if(environment.grid_->get_neighbour_cell(*it, {ii,jj}))
                     {
-                        if(ii>=0 && ii<s[0] && jj>=0 && jj<s[1])
-                        {
-                            n++;
-                            p += environment.grid_->get_cell({ii,jj})->get_estimated_value();
-                        }
+                        n+=1.0;
+                        p += environment.grid_->get_neighbour_cell(*it, {ii,jj})->get_estimated_value();
                     }
+                }
 
-                environment.grid_->get_cell({i,j})->set_ground_truth_value(p/n);
-            }
+            (*it)->set_ground_truth_value(p/n);
+        }
+
+        for(auto it=environment.grid_->begin(); it != environment.grid_->end(); it++)
+        {
+            (*it)->set_estimated_value(0.0);
         }
 
     }
@@ -78,7 +83,6 @@ private:
     static void cellular_automata_step(environment_model &environment, vector<grid_cell::ptr> &regions)
     {
         vector<grid_cell::ptr> newregions;
-
         for(auto c: regions)
         {
             for(size_t selector=0; selector<4; selector++)
@@ -103,6 +107,7 @@ private:
         {
             c->set_estimated_value(c->get_ground_truth_value());
             regions.push_back(c);
+
         }
     }
 
