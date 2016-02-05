@@ -10,8 +10,8 @@ grid::grid(const Vector2f &center, const size2f &cell_size, const size2i &size):
     cell_size_(cell_size),
     size_(size)
 {
-    neighbours_idx_4 = {{0,-1},{1,0},{0,1},{-1,0}};
-    neighbours_idx_8 = {{-1,-1},{0,-1},{1,-1},{1,0},{1,1},{0,1},{-1,1},{-1,0}};
+    neighbours_idx_4_ = {{0,-1},{1,0},{0,1},{-1,0}};
+    neighbours_idx_8_ = {{-1,-1},{0,-1},{1,-1},{1,0},{1,1},{0,1},{-1,1},{-1,0}};
 
     Vector2f ll = center - Vector2f(0.5*size_[0]*cell_size_[0], 0.5*size_[1]*cell_size_[1]);
     ll += Vector2f(0.5*cell_size_[0], 0.5*cell_size_[1]);
@@ -20,7 +20,7 @@ grid::grid(const Vector2f &center, const size2f &cell_size, const size2i &size):
         for(int i=0; i<size_[0]; i++)
         {
             auto cell = grid_cell::ptr(new grid_cell(ll+ size2f(i*cell_size_[0], j*cell_size_[1]), cell_size_, grid_index(i,j)));
-            cells.push_back(cell);
+            cells_.push_back(cell);
         }
 }
 
@@ -33,7 +33,7 @@ grid_cell::ptr grid::get_cell(const grid_index &idx) const
 {
     if(valid_index(idx))
     {
-        return cells[idx[1]*size_[0]+idx[0]];
+        return cells_[idx[1]*size_[0]+idx[0]];
     }
     else
     {
@@ -56,8 +56,40 @@ grid_cell::ptr grid::get_neighbour_cell(const grid_cell::ptr &ref, const grid_in
 
 void grid::draw()
 {
-    for(auto &c:cells)
+    for(auto &c:cells_)
         c->draw();
+}
+
+grid_cell::ptr grid::find_cell_contains(const Vector2f &v) const
+{
+    if(cells_.empty())
+        return nullptr;
+
+    auto ll = get_cell({0,0})->get_corner_ll();
+    grid_index idx = {floor((v[0]-ll[0])/cell_size_[0]), floor((v[1]-ll[1])/cell_size_[1])};
+    return get_cell(idx);
+}
+
+void grid::find_cells_in_rect(const rect &range, std::set<grid_cell::ptr> &cells, bool completely_inside) const
+{
+    Vector2f v(range[0], range[1]);
+
+    for(;v[0]<range[2]+cell_size_[0]; v[0]+=cell_size_[0])
+    {
+        v[1] = range[1];
+        for(;v[1]<range[3]+cell_size_[1]; v[1]+=cell_size_[1])
+        {
+            auto c = find_cell_contains(v);
+            if(c)
+            {
+                if(!completely_inside || utility::is_rect_inside_rect(c->get_rect(), range))
+                {
+                    cells.insert(c);
+                }
+            }
+        }
+    }
+
 }
 
 }

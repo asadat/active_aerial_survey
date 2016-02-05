@@ -9,6 +9,12 @@ sensor::sensor(environment_model &env_model):
 
 }
 
-sensor::~sensor(){}
+sensor::~sensor()
+{}
+
+void sensor::sense(const Vector3f &p)
+{
+
+}
 
 }

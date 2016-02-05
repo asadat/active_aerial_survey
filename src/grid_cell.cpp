@@ -37,6 +37,17 @@ void grid_cell::draw()
     utility::gl_vertex2f(get_corner_ur());
     utility::gl_vertex2f(get_corner_ul());
     glEnd();
+
+
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//    glLineWidth(1.0);
+//    glColor3f(0.5,0.5,1);
+//    glBegin(GL_QUADS);
+//    utility::gl_vertex2f(get_corner_ll());
+//    utility::gl_vertex2f(get_corner_lr());
+//    utility::gl_vertex2f(get_corner_ur());
+//    utility::gl_vertex2f(get_corner_ul());
+//    glEnd();
 }
 
 }

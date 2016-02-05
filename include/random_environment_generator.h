@@ -15,7 +15,6 @@ public:
     {
         ROS_WARN("random environmnet generation: seed:%ld #cluster:%d percent_interesting:%d", seed, cluster_count, percent_interesting);
 
-
         auto used_seed = seed;
 
         if(used_seed<=0)

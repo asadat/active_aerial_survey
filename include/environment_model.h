@@ -27,6 +27,7 @@ private:
 
     std::shared_ptr<grid> grid_;
 
+    friend class sensor;
     friend class random_environment_generator;
 };
 

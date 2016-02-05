@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <Eigen/Core>
+#include "utility.h"
 
 using namespace Eigen;
 
@@ -51,6 +52,8 @@ public:
     inline Vector2f get_corner_ll() const { return center_+ Vector2f(-0.5*size_[0],-0.5*size_[1]);}
     inline Vector2f get_corner_lr() const { return center_+ Vector2f( 0.5*size_[0],-0.5*size_[1]);}
 
+    inline rect get_rect() const { return rect(center_[0]-0.5*size_[0], center_[1]-0.5*size_[1],
+                center_[0]+0.5*size_[0], center_[1]+0.5*size_[1]);}
 private:
     grid_cell();
 

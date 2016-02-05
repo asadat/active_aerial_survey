@@ -54,6 +54,17 @@ void active_survey::setup_log_file()
 void active_survey::draw()
 {       
     environment_model::instance()->draw();
+
+//    glLineWidth(3);
+//    glColor3f(1,0,0);
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//    glBegin(GL_QUADS);
+
+//    utility::gl_vertex2f({-14.5, -4.5});
+//    utility::gl_vertex2f({ -14.5  , 14});
+//    utility::gl_vertex2f({ 41  , 14});
+//    utility::gl_vertex2f({41, -4.5});
+//    glEnd();
 }
 
 

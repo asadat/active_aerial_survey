@@ -2,10 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(active_survey)
 
-FIND_PACKAGE(LIBGP)
 FIND_PACKAGE(Eigen3 3.0.1 REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-std=c++11  ${CMAKE_CXX_FLAGS} -g -Wall")
+set(CMAKE_CXX_FLAGS "-std=c++11 -o3 ${CMAKE_CXX_FLAGS} -g -Wall")
 
 set(aas_LIBRARIES GL GLU glut gp)
 

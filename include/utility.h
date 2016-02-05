@@ -13,9 +13,35 @@ using namespace Eigen;
 
 namespace asn
 {
+
+typedef Vector4f rect;
+
+const double epsilon = 0.01;
+
 class utility
 {
+
 public:
+
+static bool is_point_inside_rect(const Vector2f &v, const rect &r)
+{
+    if(v[0]-r[0] > epsilon &&
+       v[1]-r[1] > epsilon &&
+       r[2]-v[0] > epsilon &&
+       r[3]-v[1] > epsilon)
+        return true;
+    else
+        return false;
+}
+
+static bool is_rect_inside_rect(const rect &r_in, const rect &r_out)
+{
+    if(is_point_inside_rect({r_in[0], r_in[1]}, r_out) &&
+            is_point_inside_rect({r_in[2], r_in[3]}, r_out))
+        return true;
+    else
+        return false;
+}
 
 static void gl_color(const Vector3f &c)
 {
