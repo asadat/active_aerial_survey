@@ -18,6 +18,8 @@ set(aas_SOURCES
     src/gaussian_field.cpp
     src/sensor.cpp
     src/mav.cpp
+    src/mav_controller.cpp
+    include/mav_controller.h
     include/mav.h
     include/sensor.h
     include/random_environment_generator.h

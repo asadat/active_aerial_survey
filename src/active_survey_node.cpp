@@ -66,7 +66,7 @@ void update_event(int ms)
     // - A = Rotate Left constant rate
     // - D = Rotate Right constant rate
     // - R = Ascend constant rate
-    // - F = Descend constant http://www.bbc.co.uk/persian/rate
+    // - F = Descend constant rate
     // - Right Click = Yaw + Pitch camera variable rate
 
     double moveRate = (static_cast<double>(ms) / 1000.0) * (active_survey_param::area_width/5 + 20);
@@ -115,6 +115,7 @@ void update_event(int ms)
 
 void idle_event()
 {
+    active_survey::instance()->update();
     glutPostRedisplay();
 }
 

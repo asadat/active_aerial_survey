@@ -17,11 +17,18 @@ namespace asn
 typedef Vector4f rect;
 
 const double epsilon = 0.01;
+const double epsilon_squared = 0.0001;
 
 class utility
 {
 
 public:
+
+static bool close_enough(const VectorXf &v, const VectorXf &u,
+                         const double &d_threshold=epsilon)
+{
+    return (v-u).squaredNorm() < d_threshold*d_threshold;
+}
 
 static bool is_point_inside_rect(const Vector2f &v, const rect &r)
 {

@@ -30,7 +30,7 @@ void sensor::sense(const Vector3f &p)
             auto cel = environment_model_.grid_->find_cell_contains(v);
             if(cel)
             {
-                ROS_INFO("sensing (%d %d)", cel->get_index()[0], cel->get_index()[1]);
+                //ROS_INFO("sensing (%d %d)", cel->get_index()[0], cel->get_index()[1]);
                 double x[] = {v[0],v[1]};
                 std::normal_distribution<> dist(cel->get_ground_truth_value(), active_survey_param::gp_sigma);
                 gaussian_field::instance()->add_pattern(x, dist(e2));
@@ -39,7 +39,7 @@ void sensor::sense(const Vector3f &p)
 
     for(auto it=environment_model_.grid_->begin(); it!=environment_model_.grid_->end(); it++)
     {
-        ROS_INFO("updating (%d %d)", (*it)->get_index()[0], (*it)->get_index()[1]);
+        //ROS_INFO("updating (%d %d)", (*it)->get_index()[0], (*it)->get_index()[1]);
 
         double x[] = {(*it)->get_center()[0],(*it)->get_center()[1]};
         (*it)->set_estimated_value(gaussian_field::instance()->f(x));

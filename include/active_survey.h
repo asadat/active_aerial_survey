@@ -1,6 +1,7 @@
 #pragma once
 
 #include "active_survey_param.h"
+#include "mav.h"
 
 #include "Eigen/Core"
 #include "ros/ros.h"
@@ -43,6 +44,7 @@ private:
     void setup_log_file();
     Vector3f get_color(double h);
 
+    std::shared_ptr<mav> mav_;
     static std::shared_ptr<active_survey> instance_;
     ros::NodeHandle nh_;
     static std::string log_file_name_;

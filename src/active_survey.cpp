@@ -12,10 +12,13 @@ FILE *active_survey::log_file_ = NULL;
 std::string active_survey::log_file_name_ = std::string("");
 std::shared_ptr<active_survey> active_survey::instance_;
 
-active_survey::active_survey(int argc, char **argv):nh_("active_survey")
+active_survey::active_survey(int argc, char **argv):
+    nh_("active_survey")
 {    
     ros::NodeHandle private_node_handle_("~");
     active_survey_param::GetParams(private_node_handle_);
+
+    mav_ = std::shared_ptr<mav>(new mav(*environment_model::instance(), {0,0,10}));
 
     if(active_survey_param::logging)
     {
@@ -54,6 +57,7 @@ void active_survey::setup_log_file()
 void active_survey::draw()
 {       
     environment_model::instance()->draw();
+    mav_->draw();
 
 //    glLineWidth(3);
 //    glColor3f(1,0,0);
@@ -73,11 +77,14 @@ void active_survey::update()
     static double ros_freq=15.0;
     static double ros_period = 1/ros_freq;
     static ros::Time last_time = ros::Time::now();
+    static ros::Time last_time_mav = ros::Time::now();
 
-    double dt = (ros::Time::now()-last_time).toSec();
+    ros::Time cur_time = ros::Time::now();
+
+    double dt = (cur_time-last_time).toSec();
     if( dt > ros_period)
     {
-        last_time = ros::Time::now();
+        last_time = cur_time;
         if(ros::ok())
         {
             ros::spinOnce();          
@@ -86,6 +93,13 @@ void active_survey::update()
         {
             exit(0);
         }
+    }
+
+    double dt_mav = (cur_time-last_time_mav).toSec();
+    if(dt_mav > 0.001)
+    {
+        last_time_mav = cur_time;
+        mav_->update(dt_mav);
     }
 
 //    double dtmav = (ros::Time::now()-lastTimeMav).toSec();
@@ -122,6 +136,29 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
         active_survey_param::non_ros::cell_drawing_mode %= 4;
         updateKey = false;
     }
+//    else if(key['q'])
+//    {
+//        mav_->set_goal({-30,20, 10});
+//        updateKey = false;
+//    }
+
+//    else if(key['w'])
+//    {
+//        mav_->change_velocity({0,0.01,0});
+//    }
+//    else if(key['s'])
+//    {
+//        mav_->change_velocity({0,-0.01,0});
+//    }
+//    else if(key['d'])
+//    {
+//        mav_->change_velocity({0.01,0,0});
+//    }
+//    else if(key['a'])
+//    {
+//        mav_->change_velocity({-0.01,0,0});
+//    }
+
 }
 
 }
