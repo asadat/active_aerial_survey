@@ -31,7 +31,8 @@ public:
     static bool visualization;
     static int bf_sqrt;
     static double speed;
-    static double area_length;
+    static double area_width;
+    static double area_height;
 
     static bool sim_running;
 

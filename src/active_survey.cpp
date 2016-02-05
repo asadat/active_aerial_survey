@@ -119,7 +119,7 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
     else if(key['2'])
     {
         active_survey_param::non_ros::cell_drawing_mode+=1;
-        active_survey_param::non_ros::cell_drawing_mode %= 2;
+        active_survey_param::non_ros::cell_drawing_mode %= 4;
         updateKey = false;
     }
 }

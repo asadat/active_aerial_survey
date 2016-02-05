@@ -16,6 +16,8 @@ public:
 private:
     environment_model &environment_model_;
 
+    rect get_rect(const Vector3f &p) const;
+
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

@@ -69,7 +69,7 @@ void update_event(int ms)
     // - F = Descend constant http://www.bbc.co.uk/persian/rate
     // - Right Click = Yaw + Pitch camera variable rate
 
-    double moveRate = (static_cast<double>(ms) / 1000.0) * (active_survey_param::area_length/5 + 20);
+    double moveRate = (static_cast<double>(ms) / 1000.0) * (active_survey_param::area_width/5 + 20);
     double angleRate = (static_cast<double>(ms) / 1000.0) * 1.;
     if(Key['w'] || Mouse_Left) // move forward
         translateCamera(moveRate, 0, 0);
@@ -268,7 +268,7 @@ void mainLoop()
 
     glutIgnoreKeyRepeat(true);
 
-    translateCamera(0, 0, active_survey_param::area_length);
+    translateCamera(0, 0, active_survey_param::area_width);
     rotateCamera(0,-1.57,0);
 
     glutMainLoop();

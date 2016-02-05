@@ -27,15 +27,16 @@ void grid_cell::draw()
         glColor3f(2*estimated_value_,2*estimated_value_,2*estimated_value_);
     else if(active_survey_param::non_ros::cell_drawing_mode == 3)
         glColor3f(2*variance_,2*variance_,2*variance_);
-    else if(active_survey_param::non_ros::cell_drawing_mode == 4)
+    else //if(active_survey_param::non_ros::cell_drawing_mode == 4)
         glColor3f(2*variance_,((1-variance_)<0?0:(1-variance_))*estimated_value_,2*variance_);
 
 
     glBegin(GL_QUADS);
-    utility::gl_vertex2f(get_corner_ll());
-    utility::gl_vertex2f(get_corner_lr());
-    utility::gl_vertex2f(get_corner_ur());
-    utility::gl_vertex2f(get_corner_ul());
+    utility::draw_quad(get_rect());
+//    utility::gl_vertex2f(get_corner_ll());
+//    utility::gl_vertex2f(get_corner_lr());
+//    utility::gl_vertex2f(get_corner_ur());
+//    utility::gl_vertex2f(get_corner_ul());
     glEnd();
 
 

@@ -58,6 +58,17 @@ void grid::draw()
 {
     for(auto &c:cells_)
         c->draw();
+
+    rect bbox(center_[0]-0.5*size_[0]*cell_size_[0], center_[1]-0.5*size_[1]*cell_size_[1],
+            center_[0]+0.5*size_[0]*cell_size_[0], center_[1]+0.5*size_[1]*cell_size_[1]);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(2);
+    glColor3f(0.3,0.6,0.8);
+
+    glBegin(GL_QUADS);
+    utility::draw_quad(bbox);
+    glEnd();
 }
 
 grid_cell::ptr grid::find_cell_contains(const Vector2f &v) const
