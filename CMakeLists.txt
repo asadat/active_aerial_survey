@@ -19,6 +19,10 @@ set(aas_SOURCES
     src/sensor.cpp
     src/mav.cpp
     src/mav_controller.cpp
+    src/behaviour_controller.cpp
+    src/behaviour_planner.cpp
+    include/behaviour_controller.h
+    include/behaviour_planner.h
     include/mav_controller.h
     include/mav.h
     include/sensor.h

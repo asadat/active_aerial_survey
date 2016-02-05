@@ -1,4 +1,4 @@
 active_survey
 ===
 
-Avtive aerial survey
+Active aerial survey
