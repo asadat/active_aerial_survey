@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "plan.h"
 
 namespace asn
 {
@@ -15,8 +16,13 @@ public:
     behaviour_planner(mav &m);
     virtual ~behaviour_planner();
 
+    waypoint::ptr get_next_waypoint();
+
 private:
-    mav & mav_;
+    void generate_test_waypoints();
+
+    mav &mav_;
+    plan plan_;
 };
 
 }

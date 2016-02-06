@@ -21,6 +21,21 @@ void behaviour_controller::update(const double &dt)
     {
         mav_.update_state(dt);
     }
+    else
+    {
+      if(waypoint_)
+          waypoint_->on_reached_waypoint(waypoint_);
+
+      waypoint_ = behaviour_planner_->get_next_waypoint();
+      if(waypoint_)
+      {
+          mav_.set_goal(waypoint_->get_position());
+      }
+      else
+      {
+          ROS_INFO("behaviour controller: invalid waypoint pointer!");
+      }
+    }
 }
 
 }

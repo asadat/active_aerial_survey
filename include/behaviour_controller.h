@@ -21,5 +21,8 @@ public:
 private:
     mav & mav_;
     behaviour_planner::ptr behaviour_planner_;
+
+    waypoint::ptr waypoint_;
+
 };
 }

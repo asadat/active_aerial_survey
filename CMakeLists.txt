@@ -22,6 +22,8 @@ set(aas_SOURCES
     src/behaviour_controller.cpp
     src/behaviour_planner.cpp
     src/waypoint.cpp
+    src/plan.cpp
+    include/plan.h
     include/waypoint.h
     include/behaviour_controller.h
     include/behaviour_planner.h
