@@ -21,6 +21,8 @@ set(aas_SOURCES
     src/mav_controller.cpp
     src/behaviour_controller.cpp
     src/behaviour_planner.cpp
+    src/waypoint.cpp
+    include/waypoint.h
     include/behaviour_controller.h
     include/behaviour_planner.h
     include/mav_controller.h

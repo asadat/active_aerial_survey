@@ -5,10 +5,6 @@
 
 #include "ros/ros.h"
 
-
-#define AREA(r) (fabs(r[0]-r[2]) * fabs(r[1]-r[3]))
-#define RAND(x,y) (x+((double)(rand()%1000000)*0.000001*(y-x)))
-
 using namespace Eigen;
 
 namespace asn
@@ -18,6 +14,9 @@ typedef Vector4f rect;
 
 const double epsilon = 0.01;
 const double epsilon_squared = 0.0001;
+const int rand_precision = 1000000;
+const double rand_precision_inv = 0.000001;
+
 
 class utility
 {
@@ -28,6 +27,16 @@ static bool close_enough(const VectorXf &v, const VectorXf &u,
                          const double &d_threshold=epsilon)
 {
     return (v-u).squaredNorm() < d_threshold*d_threshold;
+}
+
+static double random_number(const double &a, const double &b)
+{
+    return a+((rand()%rand_precision)*rand_precision_inv*(b-a));
+}
+
+static float random_number_f(const float &a, const float &b)
+{
+    return a+((rand()%rand_precision)*rand_precision_inv*(b-a));
 }
 
 static bool is_point_inside_rect(const Vector2f &v, const rect &r)

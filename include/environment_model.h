@@ -16,6 +16,8 @@ public:
         return instance_;
     }
 
+    static void reset(){instance_.reset();}
+
     ~environment_model();
 
     void generate_environment();

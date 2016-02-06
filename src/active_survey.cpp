@@ -34,6 +34,9 @@ active_survey::~active_survey()
     {
         fclose(log_file_);
     }
+
+    gaussian_field::reset();
+    environment_model::reset();
 }
 
 void active_survey::setup_log_file()
@@ -136,11 +139,22 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
         active_survey_param::non_ros::cell_drawing_mode %= 4;
         updateKey = false;
     }
-//    else if(key['q'])
-//    {
-//        mav_->set_goal({-30,20, 10});
-//        updateKey = false;
-//    }
+    else if(key[']'])
+    {
+        mav_->set_goal({utility::random_number_f(-0.5*active_survey_param::area_width,  0.5*active_survey_param::area_width),
+                        utility::random_number_f(-0.5*active_survey_param::area_height, 0.5*active_survey_param::area_height), 10});
+        updateKey = false;
+    }
+    else if(key['['])
+    {
+        mav_->stop();
+        updateKey = false;
+    }
+    else if(key['p'])
+    {
+        mav_->sense();
+        updateKey = false;
+    }
 
 //    else if(key['w'])
 //    {

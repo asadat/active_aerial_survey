@@ -34,8 +34,8 @@ public:
 
         for(int i=0; i<cluster_count; i++)
         {
-           int gx = RAND(0, s[0]);
-           int gy = RAND(0, s[1]);
+           int gx = utility::random_number(0, s[0]);
+           int gy = utility::random_number(0, s[1]);
 
            auto c = environment.grid_->get_cell({gx, gy});
            if(c)
@@ -93,7 +93,7 @@ private:
                 {
                     if(nb->get_ground_truth_value() < 0.4 && nb->get_estimated_value() < 0.4)
                     {
-                        if(RAND(0,100) < 50)
+                        if(utility::random_number(0,100) < 50)
                         {
                             nb->set_ground_truth_value(0.5);
                             newregions.push_back(nb);

@@ -4,9 +4,14 @@
 #include "environment_model.h"
 #include "sensor.h"
 #include "mav_controller.h"
+#include "behaviour_controller.h"
 
 namespace asn
 {
+
+class behaviour_controller;
+class behaviour_planner;
+
 class mav
 {
 public:
@@ -25,6 +30,8 @@ public:
 
     void sense();
     void update(const double &dt);
+    bool at_goal();
+    void stop();
 
     void draw();
 private:
@@ -35,8 +42,11 @@ private:
     Vector3f velocity_;
     Vector3f goal_;
     mav_controller mav_controller_;
+    behaviour_controller::ptr behaviour_controller_;
 
     const double goal_reached_threshold_;
+
+    friend class behaviour_controller;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
