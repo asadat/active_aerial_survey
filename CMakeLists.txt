@@ -12,29 +12,29 @@ set(aas_SOURCES
     src/active_survey.cpp
     src/active_survey_node.cpp
     src/active_survey_param.cpp
-    src/environment_model.cpp
-    src/grid_cell.cpp
-    src/grid.cpp
-    src/gaussian_field.cpp
-    src/sensor.cpp
-    src/mav.cpp
-    src/mav_controller.cpp
-    src/behaviour_controller.cpp
-    src/behaviour_planner.cpp
-    src/waypoint.cpp
-    src/plan.cpp
-    include/plan.h
-    include/waypoint.h
-    include/behaviour_controller.h
-    include/behaviour_planner.h
-    include/mav_controller.h
-    include/mav.h
-    include/sensor.h
-    include/random_environment_generator.h
-    include/gaussian_field.h
-    include/grid_cell.h
-    include/grid.h
-    include/environment_model.h
+    src/environment_model/environment_model.cpp
+    src/environment_model/grid_cell.cpp
+    src/environment_model/grid.cpp
+    src/environment_model/gaussian_field.cpp
+    src/mav/sensor.cpp
+    src/mav/mav.cpp
+    src/mav/mav_controller.cpp
+    src/planner/behaviour_controller.cpp
+    src/planner/behaviour_planner.cpp
+    src/planner/waypoint.cpp
+    src/planner/plan.cpp
+    include/planner/plan.h
+    include/planner/waypoint.h
+    include/planner/behaviour_controller.h
+    include/planner/behaviour_planner.h
+    include/mav/mav_controller.h
+    include/mav/mav.h
+    include/mav/sensor.h
+    include/environment_model/random_environment_generator.h
+    include/environment_model/gaussian_field.h
+    include/environment_model/grid_cell.h
+    include/environment_model/grid.h
+    include/environment_model/environment_model.h
     include/active_survey.h    
     include/active_survey_param.h
     include/utility.h

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "plan.h"
+#include "planner/plan.h"
 
 namespace asn
 {

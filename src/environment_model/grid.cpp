@@ -1,4 +1,4 @@
-#include "grid.h"
+#include "environment_model/grid.h"
 #include "ros/ros.h"
 namespace asn
 {

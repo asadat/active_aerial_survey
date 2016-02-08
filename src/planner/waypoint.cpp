@@ -1,4 +1,4 @@
-#include "waypoint.h"
+#include "planner/waypoint.h"
 
 namespace asn
 {

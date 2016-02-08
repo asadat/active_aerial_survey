@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "behaviour_planner.h"
+#include "planner/behaviour_planner.h"
 
 namespace asn
 {

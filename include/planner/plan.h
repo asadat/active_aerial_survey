@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include "waypoint.h"
+#include "planner/waypoint.h"
 
 namespace asn
 {

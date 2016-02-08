@@ -1,4 +1,4 @@
-#include "grid_cell.h"
+#include "environment_model/grid_cell.h"
 #include "utility.h"
 #include "active_survey_param.h"
 

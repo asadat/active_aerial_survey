@@ -1,7 +1,7 @@
 
 #include "active_survey.h"
 #include "GL/glut.h"
-#include "environment_model.h"
+#include "environment_model/environment_model.h"
 
 using namespace Eigen;
 

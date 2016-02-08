@@ -1,6 +1,6 @@
 #pragma once
 #include <functional>
-#include "environment_model.h"
+#include "environment_model/environment_model.h"
 #include "utility.h"
 
 using namespace std;

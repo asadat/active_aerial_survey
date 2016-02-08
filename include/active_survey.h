@@ -1,7 +1,7 @@
 #pragma once
 
 #include "active_survey_param.h"
-#include "mav.h"
+#include "mav/mav.h"
 
 #include "Eigen/Core"
 #include "ros/ros.h"

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "utility.h"
-#include "environment_model.h"
-#include "sensor.h"
-#include "mav_controller.h"
-#include "behaviour_controller.h"
+#include "environment_model/environment_model.h"
+#include "mav/sensor.h"
+#include "mav/mav_controller.h"
+#include "planner/behaviour_controller.h"
 
 namespace asn
 {

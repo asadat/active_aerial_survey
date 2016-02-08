@@ -1,7 +1,7 @@
 #pragma once
 
-#include "environment_model.h"
-#include "gaussian_field.h"
+#include "environment_model/environment_model.h"
+#include "environment_model/gaussian_field.h"
 
 namespace asn
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "grid_cell.h"
+#include "environment_model/grid_cell.h"
 #include <vector>
 
 #include "utility.h"

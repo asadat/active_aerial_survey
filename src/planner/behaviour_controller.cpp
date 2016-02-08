@@ -1,5 +1,5 @@
-#include "behaviour_controller.h"
-#include "mav.h"
+#include "planner/behaviour_controller.h"
+#include "mav/mav.h"
 
 namespace asn
 {

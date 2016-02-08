@@ -1,6 +1,6 @@
-#include "environment_model.h"
-#include "random_environment_generator.h"
-#include "sensor.h"
+#include "environment_model/environment_model.h"
+#include "environment_model/random_environment_generator.h"
+#include "mav/sensor.h"
 
 namespace asn
 {

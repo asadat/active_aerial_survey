@@ -1,4 +1,4 @@
-#include "gaussian_field.h"
+#include "environment_model/gaussian_field.h"
 #include "GL/glut.h"
 #include "active_survey_param.h"
 

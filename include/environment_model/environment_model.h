@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "grid.h"
+#include "environment_model/grid.h"
 #include "active_survey_param.h"
 
 namespace asn
