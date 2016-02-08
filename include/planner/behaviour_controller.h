@@ -17,12 +17,14 @@ public:
     virtual ~behaviour_controller();
 
     void update(const double &dt);
+    void draw();
 
 private:
     mav & mav_;
     behaviour_planner::ptr behaviour_planner_;
 
     waypoint::ptr waypoint_;
+    Vector3f last_sensing_pos_;
 
 };
 }

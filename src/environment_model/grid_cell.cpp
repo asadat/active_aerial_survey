@@ -13,6 +13,8 @@ grid_cell::grid_cell(const Vector2f &center, const size2f &s, const grid_index &
     size_(s),
     index_(index)
 {
+    variance_=1;
+
 }
 
 grid_cell::~grid_cell(){}

@@ -1,4 +1,5 @@
 #include "mav/sensor.h"
+#include <thread>
 
 namespace asn
 {
@@ -13,13 +14,28 @@ sensor::~sensor()
 {
 }
 
-void sensor::sense(const Vector3f &p)
+void sensor::sense(const Vector3f &p, std::function<void(void)> callback)
 {
+    std::thread sensing_thread([this, p, callback]()
+    {
+        //auto t0 = ros::Time::now();
+        this->perform_sense(p, callback);
+        //ROS_INFO_THROTTLE(1,"sensing time: %f", (ros::Time::now()-t0).toSec());
+    });
+    sensing_thread.detach();
+}
+
+void sensor::perform_sense(Vector3f p, std::function<void(void)> callback)
+{
+    environment_model_.grid_mutex_.lock();
+
+    //auto t0 = ros::Time::now();
+
     std::random_device rd;
     std::mt19937 e2(rd());
     auto fp = get_rect(p);
 
-    const int n = 4;
+    const int n = 2;
     double dx = fabs(fp[0]-fp[2])/n;
     double dy = fabs(fp[1]-fp[3])/n;
     for(int i=0; i<n; i++)
@@ -37,7 +53,16 @@ void sensor::sense(const Vector3f &p)
             }
         }
 
-    for(auto it=environment_model_.grid_->begin(); it!=environment_model_.grid_->end(); it++)
+    //ROS_INFO("sensing time (1): %f", (ros::Time::now()-t0).toSec());
+    //t0 = ros::Time::now();
+
+    rect update_rect = fp;
+    update_rect += rect(-15,-15,15,15);
+
+    std::set<grid_cell::ptr> update_cells;
+    environment_model_.grid_->find_cells_in_rect(update_rect, update_cells, false);
+
+    for(auto it=update_cells.begin(); it!=update_cells.end(); it++)
     {
         //ROS_INFO("updating (%d %d)", (*it)->get_index()[0], (*it)->get_index()[1]);
 
@@ -46,6 +71,11 @@ void sensor::sense(const Vector3f &p)
         (*it)->set_variance(gaussian_field::instance()->var(x));
     }
 
+    //ROS_INFO("sensing time (2): %f", (ros::Time::now()-t0).toSec());
+
+    callback();
+
+    environment_model_.grid_mutex_.unlock();
 }
 
 rect sensor::get_rect(const Vector3f &p) const

@@ -12,7 +12,7 @@ shared_ptr<gaussian_field> gaussian_field::instance_;
 gaussian_field::gaussian_field():GaussianProcess(2, "CovSum ( CovSEiso, CovNoise)")
 {
     Eigen::VectorXd params(covf().get_param_dim());
-    params << log(active_survey_param::min_footprint*10), log(1), log(active_survey_param::gp_sigma);
+    params << log(10), log(1), log(active_survey_param::gp_sigma);
     covf().set_loghyper(params);
 }
 

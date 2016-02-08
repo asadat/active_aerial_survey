@@ -37,6 +37,7 @@ public:
 private:
     void update_state(const double &dt);
 
+    environment_model &environment_model_;
     sensor  sensor_;
     Vector3f position_;
     Vector3f velocity_;
@@ -47,6 +48,7 @@ private:
     const double goal_reached_threshold_;
 
     friend class behaviour_controller;
+    friend class behaviour_planner;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

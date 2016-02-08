@@ -18,11 +18,21 @@ public:
 
     waypoint::ptr get_next_waypoint();
 
+    void draw();
+    void sensing_callback();
+
 private:
+    void greedy();
+    void semi_greedy();
+    void two_stage();
+
+    void generate_coarse_survey();
     void generate_test_waypoints();
 
     mav &mav_;
     plan plan_;
+
+    waypoint::ptr last_waypoint;
 };
 
 }

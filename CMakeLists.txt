@@ -23,6 +23,9 @@ set(aas_SOURCES
     src/planner/behaviour_planner.cpp
     src/planner/waypoint.cpp
     src/planner/plan.cpp
+    src/math/polygon.cpp
+    include/math/polygon.h
+    include/planner/trajectory_planner.h
     include/planner/plan.h
     include/planner/waypoint.h
     include/planner/behaviour_controller.h

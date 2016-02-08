@@ -5,6 +5,7 @@ namespace asn
 {
 
 mav::mav(environment_model &em, const Vector3f &position):
+    environment_model_(em),
     sensor_(em),
     position_(position),
     velocity_(0,0,0),
@@ -19,7 +20,9 @@ mav::~mav(){}
 
 void mav::sense()
 {
-    sensor_.sense(position_);
+    //auto t0 = ros::Time::now();
+    sensor_.sense(position_, [](){});
+    //ROS_INFO_THROTTLE(1,"sensing time: %f", (t0-ros::Time::now()).toSec());
 }
 
 void mav::update(const double &dt)
@@ -45,6 +48,8 @@ void mav::stop()
 
 void mav::draw()
 {
+    behaviour_controller_->draw();
+
     glColor3f(0,0,1);
     glLineWidth(2);
     double l=0.25 * active_survey_param::area_width/32.0;

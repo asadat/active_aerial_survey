@@ -5,14 +5,15 @@ namespace asn
 {
 
 behaviour_controller::behaviour_controller(mav &m):
-    mav_(m)
+    mav_(m),
+    behaviour_planner_(new behaviour_planner(m))
 {
-    behaviour_planner_ = behaviour_planner::ptr(new behaviour_planner(mav_));
+     //= behaviour_planner::ptr(new behaviour_planner(mav_));
+    last_sensing_pos_ = mav_.get_position();
 }
 
 behaviour_controller::~behaviour_controller()
 {
-
 }
 
 void behaviour_controller::update(const double &dt)
@@ -20,6 +21,11 @@ void behaviour_controller::update(const double &dt)
     if(!mav_.at_goal())
     {
         mav_.update_state(dt);
+        if((last_sensing_pos_-mav_.get_position()).squaredNorm() > active_survey_param::min_footprint*50*active_survey_param::min_footprint*5)
+        {
+            last_sensing_pos_ = mav_.get_position();
+            mav_.sensor_.sense(mav_.get_position(), [this](){this->behaviour_planner_->sensing_callback();});
+        }
     }
     else
     {
@@ -33,9 +39,14 @@ void behaviour_controller::update(const double &dt)
       }
       else
       {
-          ROS_INFO("behaviour controller: invalid waypoint pointer!");
+          ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer!");
       }
     }
+}
+
+void behaviour_controller::draw()
+{
+    behaviour_planner_->draw();
 }
 
 }

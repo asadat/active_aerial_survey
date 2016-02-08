@@ -31,5 +31,19 @@ void environment_model::generate_environment()
     random_environment_generator::generate(*this, active_survey_param::random_seed, 4, active_survey_param::percent_interesting);
 }
 
+void environment_model::get_environment_polygon(polygon &poly)
+{
+    auto c = grid_->get_center();
+
+    poly.push_back(c+Vector2f(-0.5*active_survey_param::area_width,
+                              -0.5*active_survey_param::area_height));
+    poly.push_back(c+Vector2f(+0.5*active_survey_param::area_width,
+                              -0.5*active_survey_param::area_height));
+    poly.push_back(c+Vector2f(+0.5*active_survey_param::area_width,
+                              +0.5*active_survey_param::area_height));
+    poly.push_back(c+Vector2f(-0.5*active_survey_param::area_width,
+                              +0.5*active_survey_param::area_height));
+}
+
 }
 

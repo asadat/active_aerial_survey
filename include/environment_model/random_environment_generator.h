@@ -74,7 +74,7 @@ public:
         for(auto it=environment.grid_->begin(); it != environment.grid_->end(); it++)
         {
             (*it)->set_estimated_value(0.0);
-            (*it)->set_variance(0.0);
+            (*it)->set_variance(1.0);
         }
 
 
