@@ -30,6 +30,12 @@ public:
     inline void set_label(label l){label_=l;}
     inline bool has_label() const {return (label_>0);}
 
+    inline label get_approx_label() const {return approx_label_;}
+    inline void set_approx_label(label l){approx_label_=l;}
+
+    inline bool is_checked_for_skinny() const {return checked_for_skinny_;}
+    inline void set_checked_for_skinny(bool checked_for_skinny){checked_for_skinny_=checked_for_skinny;}
+
     inline bool is_visited() const {return visited_;}
     inline void set_visited(bool visited){visited_=visited;}
 
@@ -49,12 +55,15 @@ public:
     int flags_;
 
 protected:
-    grid_cell_base():flags_(0), variance_(1), label_(0), visited_(false), covered_(false) {}
+    grid_cell_base():flags_(0), variance_(1), label_(0),
+        approx_label_(0), checked_for_skinny_(false), visited_(false), covered_(false) {}
 
     double ground_truth_value_;
     double estimated_value_;
     double variance_;
     label label_;
+    label approx_label_;
+    bool checked_for_skinny_;
 
     /*
      * This means that the cell has been sensed

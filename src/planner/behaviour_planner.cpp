@@ -101,6 +101,8 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
                 }
             });
 
+            gs->find_approximate_polygon();
+
             graph_->add_node(std::static_pointer_cast<graph_node>(gs));
         }
     }
@@ -139,8 +141,6 @@ void behaviour_planner::draw()
             utility::gl_vertex3f(mav_.get_position());
         }
 
-        //utility::gl_vertex3f((*it)->get_position());
-
         for(; it+1!=plan_.end(); it++)
         {
             utility::gl_vertex3f((*it)->get_position());
@@ -151,10 +151,23 @@ void behaviour_planner::draw()
         glEnd();
     }
 
+
     components_mutex_.lock();
     for(auto &c: components_)
     {
         c->draw();
+    }
+
+    for(auto &gsp:segments_)
+    {
+        grid_segment::ptr gs = gsp.second;
+        glLineWidth(5);
+        glColor3f(0.6,0.5,0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glBegin(GL_POLYGON);
+        for(auto it=gs->begin_approx_poly(); it!= gs->end_approx_poly(); it++)
+            utility::gl_vertex3f(*it, 0.3);
+        glEnd();
     }
     components_mutex_.unlock();
 }

@@ -23,6 +23,12 @@ class utility
 
 public:
 
+static double point_to_line_distance(Vector2f p1, Vector2f p2, Vector2f x)
+{
+    double d = fabs((p2[0]-p1[0])*(p1[1]-x[1]) - (p1[0]-x[0])*(p2[1]-p1[1]))/sqrt((p2[0]-p1[0])*(p2[0]-p1[0])+(p2[1]-p1[1])*(p2[1]-p1[1]));
+    return d;
+}
+
 static bool close_enough(const VectorXf &v, const VectorXf &u,
                          const double &d_threshold=epsilon)
 {
