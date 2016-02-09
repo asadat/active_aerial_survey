@@ -26,8 +26,8 @@ public:
     bool empty() const {return waypoints_.empty();}
 
     waypoint::ptr pop_next_waypoint();
-    void push_front(waypoint::ptr waypoint){waypoints_.push_back(waypoint);}
-    void push_back(waypoint::ptr waypoint){waypoints_.insert(waypoints_.begin(),waypoint);}
+    void push_front(waypoint::ptr waypoint){waypoints_.insert(waypoints_.begin(),waypoint);}
+    void push_back(waypoint::ptr waypoint){waypoints_.push_back(waypoint);}
 
 private:
     std::vector<waypoint::ptr> waypoints_;

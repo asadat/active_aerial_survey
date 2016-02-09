@@ -25,6 +25,7 @@ private:
 
     waypoint::ptr waypoint_;
     Vector3f last_sensing_pos_;
+    bool sensing_;
 
 };
 }

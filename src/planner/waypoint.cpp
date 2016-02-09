@@ -3,7 +3,8 @@
 namespace asn
 {
 waypoint::waypoint(const Vector3f &pos):
-    pos_(pos)
+    pos_(pos),
+    action_(action::NONE)
 {
 
 }

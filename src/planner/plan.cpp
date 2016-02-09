@@ -19,8 +19,8 @@ waypoint::ptr plan::pop_next_waypoint()
     if(waypoints_.empty())
         throw std::range_error("Tried to pop waypoint an empty plan");
 
-    auto wp = waypoints_.back();
-    waypoints_.pop_back();
+    auto wp = waypoints_.front();
+    waypoints_.erase(waypoints_.begin());
     return wp;
 }
 

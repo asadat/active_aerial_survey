@@ -11,6 +11,9 @@ namespace asn
 class waypoint
 {
 public:
+
+    enum class action {NONE=0, START_SENSING, STOP_SENSING};
+
     typedef std::shared_ptr<waypoint> ptr;
     typedef std::function<void(ptr)> waypoint_call_back;
 
@@ -27,9 +30,13 @@ public:
 
     void on_reached_waypoint(ptr waypoint_ptr);
 
+    action get_action() const {return action_;}
+    void set_action(const action &a){action_=a;}
+
 protected:
     Vector3f pos_;
     waypoint_call_back waypoint_call_back_;
+    action action_;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

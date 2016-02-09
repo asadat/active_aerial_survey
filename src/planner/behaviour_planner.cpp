@@ -21,7 +21,7 @@ void behaviour_planner::generate_test_waypoints()
 {
     for(int i=0; i<10; i++)
     {
-        waypoint::ptr wp(new waypoint({(float)i,5.0f*(i%2), 10.0}));
+        waypoint::ptr wp = std::make_shared<waypoint>(Vector3f({(float)i,5.0f*(i%2), 10.0}));
         wp->set_waypoint_call_back([](waypoint::ptr wp_ptr)
         {
             ROS_INFO("Waypoint callback: reached test waypoint %f %f %f",
@@ -44,7 +44,7 @@ void behaviour_planner::generate_coarse_survey()
 
     for(auto &tp: t)
     {
-        waypoint::ptr wp(new waypoint(tp));
+        waypoint::ptr wp = std::make_shared<waypoint>(tp);
         wp->set_waypoint_call_back([](waypoint::ptr wp_ptr)
         {
             ROS_INFO("Waypoint callback: reached test waypoint %f %f %f",
@@ -52,8 +52,20 @@ void behaviour_planner::generate_coarse_survey()
                     wp_ptr->get_position()[1],
                     wp_ptr->get_position()[2]);
         });
+
+        wp->set_action(waypoint::action::START_SENSING);
+
         plan_.push_back(wp);
     }
+
+    //stop sensing after the last waypoint
+    plan_.back()->set_action(waypoint::action::STOP_SENSING);
+
+    //insert home waypoint
+    auto home_wp = std::make_shared<waypoint>(mav_.get_position());
+    home_wp->set_action(waypoint::action::NONE);
+    plan_.push_back(home_wp);
+
 }
 
 waypoint::ptr behaviour_planner::get_next_waypoint()
@@ -118,18 +130,23 @@ void behaviour_planner::draw()
 
         auto it=plan_.begin();
 
-        utility::gl_vertex3f((*it)->get_position());
-
-        for(it++; it!=plan_.end(); it++)
-        {
-            utility::gl_vertex3f((*it)->get_position());
-            utility::gl_vertex3f((*it)->get_position());
-        }
-
         if(last_waypoint)
         {
             utility::gl_vertex3f(last_waypoint->get_position());
         }
+        else
+        {
+            utility::gl_vertex3f(mav_.get_position());
+        }
+
+        //utility::gl_vertex3f((*it)->get_position());
+
+        for(; it+1!=plan_.end(); it++)
+        {
+            utility::gl_vertex3f((*it)->get_position());
+            utility::gl_vertex3f((*it)->get_position());
+        }
+
 
         glEnd();
     }
