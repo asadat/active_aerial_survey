@@ -37,6 +37,9 @@ public:
     inline const_polygon_vertex_iterator begin_approx_poly() const {return approximate_polygon_.begin();}
     inline const_polygon_vertex_iterator end_approx_poly() const {return approximate_polygon_.end();}
 
+    inline const_polygon_vertex_iterator begin_convexhull() const {return convexhull_.begin();}
+    inline const_polygon_vertex_iterator end_convexhull() const {return convexhull_.end();}
+
     static inline bool is_visited(grid_cell::ptr &cell){return cell->flags_&1;}
     static inline void set_visited(grid_cell::ptr &cell){cell->flags_ |= 1;}
 

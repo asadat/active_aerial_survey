@@ -23,6 +23,11 @@ class utility
 
 public:
 
+static double angle(const Vector2f &a, const Vector2f &b, const Vector2f &c)
+{
+    return acos((a-b).dot(c-b) / (sqrt((a-b).dot(a-b))*sqrt((c-b).dot(c-b))) );
+}
+
 static double point_to_line_distance(Vector2f p1, Vector2f p2, Vector2f x)
 {
     double d = fabs((p2[0]-p1[0])*(p1[1]-x[1]) - (p1[0]-x[0])*(p2[1]-p1[1]))/sqrt((p2[0]-p1[0])*(p2[0]-p1[0])+(p2[1]-p1[1])*(p2[1]-p1[1]));

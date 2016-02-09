@@ -1,5 +1,6 @@
-#include "environment_model/grid_segment.h"
+#include <Eigen/Dense>
 
+#include "environment_model/grid_segment.h"
 #include "active_survey_param.h"
 
 using namespace std;
@@ -242,7 +243,131 @@ void grid_segment::find_approximate_polygon()
 
 void grid_segment::find_convexhull()
 {
+    convexhull_.clear();
+    if(approximate_polygon_.size()<3)
+    {
+        return;
+    }
 
+    // first node is the bottom most node
+    size_t first=0;
+    for(unsigned int i=1; i<approximate_polygon_.size(); i++)
+        if(approximate_polygon_[first][1]> approximate_polygon_[i][1])
+            first = i;
+
+    convexhull_.push_back(approximate_polygon_[first]);
+
+
+    //second node
+    size_t second=1;
+    Vector2f p1 = convexhull_[0] - Vector2f(-1, 0);
+    Vector2f p2 = convexhull_.back();
+
+    double ang = utility::angle(p1, p2, approximate_polygon_[1]);
+    for(size_t i=2; i<approximate_polygon_.size(); i++)
+    {
+        double a = utility::angle(p1, p2, approximate_polygon_[i]);
+        if(a> ang)
+        {
+            ang = a;
+            second = i;
+        }
+    }
+
+    convexhull_.push_back(approximate_polygon_[second]);
+
+    //check if the cells form a line a line
+    bool is_line = true;
+    Vector2f p_0 = approximate_polygon_[0];
+    Vector2f p_1 = approximate_polygon_[1];
+
+    for(size_t i=2; i < approximate_polygon_.size() && is_line; i++)
+    {
+        Vector2f p_n = approximate_polygon_[i];
+        if(fabs((p_0[1]-p_1[1])*(p_0[0]-p_n[0]) - (p_0[1]-p_n[1])*(p_0[0]-p_1[0])) > 0.01)
+        {
+            is_line = false;
+        }
+    }
+
+    if(is_line)
+    {
+        convexhull_.clear();
+        std::copy(approximate_polygon_.begin(), approximate_polygon_.end(), std::back_inserter(convexhull_));
+    }
+    else
+    {
+        // the rest of the nodes
+        while(true)
+        {
+            //if(n++ > 100) return;
+            p1 = convexhull_[convexhull_.size()-2];
+            p2 = convexhull_.back();
+            int next = -1;
+            ang = -1;
+            for(size_t i=0; i<approximate_polygon_.size(); i++)
+            {
+                if(approximate_polygon_[i] == convexhull_.back())
+                    continue;
+
+                double a = utility::angle(p1, p2, approximate_polygon_[i]);
+                if(a> ang)
+                {
+                    ang = a;
+                    next = i;
+                }
+            }
+
+            if(next > -1)
+            {
+                if(std::find(convexhull_.begin(), convexhull_.end(), approximate_polygon_[next]) != convexhull_.end())
+                    break;
+                else
+                    convexhull_.push_back(approximate_polygon_[next]);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // remove extra nodes (colinear edges)
+        size_t sz = convexhull_.size();
+
+        for(int i=0; i < (int)convexhull_.size(); i++)
+        {
+            sz = convexhull_.size();
+
+            int i1 = ((i-1)+sz)%sz;
+            int i2 = i;
+            int i3 = (i+1)%sz;
+
+            Vector2f v = convexhull_[i2] - convexhull_[i1];
+            Vector2f u = convexhull_[i3] - convexhull_[i2];
+
+            Vector3f v3(v[0], v[1], 0.0);
+            Vector3f u3(u[0], u[1], 0.0);
+
+            auto r = u3.cross(v3);
+
+            if(sqrt(r.dot(r)) < 0.1)
+            {
+                convexhull_.erase(convexhull_.begin()+i);
+                i--;
+            }
+        }
+    }
+
+
+//    center = makeVector(0,0,0);
+//    for(size_t i=0; i < convexhull_.size(); i++)
+//    {
+//        center += convexhull_[i];
+//    }
+
+//    center = (1.0/(float)convexhull_.size())*center;
+
+    std::reverse(convexhull_.begin(), convexhull_.end());
 }
 
 }

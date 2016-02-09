@@ -102,6 +102,7 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
             });
 
             gs->find_approximate_polygon();
+            gs->find_convexhull();
 
             graph_->add_node(std::static_pointer_cast<graph_node>(gs));
         }
@@ -155,7 +156,7 @@ void behaviour_planner::draw()
     components_mutex_.lock();
     for(auto &c: components_)
     {
-        c->draw();
+        //c->draw();
     }
 
     for(auto &gsp:segments_)
@@ -165,7 +166,8 @@ void behaviour_planner::draw()
         glColor3f(0.6,0.5,0);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glBegin(GL_POLYGON);
-        for(auto it=gs->begin_approx_poly(); it!= gs->end_approx_poly(); it++)
+        //for(auto it=gs->begin_approx_poly(); it!= gs->end_approx_poly(); it++)
+        for(auto it=gs->begin_convexhull(); it!= gs->end_convexhull(); it++)
             utility::gl_vertex3f(*it, 0.3);
         glEnd();
     }
