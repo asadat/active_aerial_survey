@@ -34,8 +34,10 @@ public:
     void stop();
 
     void draw();
+
 private:
     void update_state(const double &dt);
+    inline grid& get_grid(){return *environment_model_.grid_;}
 
     environment_model &environment_model_;
     sensor  sensor_;

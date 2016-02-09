@@ -21,7 +21,7 @@ mav::~mav(){}
 void mav::sense()
 {
     //auto t0 = ros::Time::now();
-    sensor_.sense(position_, [](){});
+    sensor_.sense(position_, [](std::set<grid_cell::ptr>& covered_cells){});
     //ROS_INFO_THROTTLE(1,"sensing time: %f", (t0-ros::Time::now()).toSec());
 }
 
@@ -49,6 +49,15 @@ void mav::stop()
 void mav::draw()
 {
     behaviour_controller_->draw();
+
+    auto fp = sensor_.get_rect(position_);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(1.0);
+    glColor3f(0.4, 0.4, 0.4);
+    glBegin(GL_QUADS);
+    utility::draw_quad(fp);
+    glEnd();
 
     glColor3f(0,0,1);
     glLineWidth(2);

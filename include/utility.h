@@ -39,21 +39,21 @@ static float random_number_f(const float &a, const float &b)
     return a+((rand()%rand_precision)*rand_precision_inv*(b-a));
 }
 
-static bool is_point_inside_rect(const Vector2f &v, const rect &r)
+static bool is_point_inside_rect(const Vector2f &v, const rect &r, const double &d_thr=epsilon)
 {
-    if(v[0]-r[0] > epsilon &&
-       v[1]-r[1] > epsilon &&
-       r[2]-v[0] > epsilon &&
-       r[3]-v[1] > epsilon)
+    if(v[0]-r[0] > d_thr &&
+       v[1]-r[1] > d_thr &&
+       r[2]-v[0] > d_thr &&
+       r[3]-v[1] > d_thr)
         return true;
     else
         return false;
 }
 
-static bool is_rect_inside_rect(const rect &r_in, const rect &r_out)
+static bool is_rect_inside_rect(const rect &r_in, const rect &r_out, const double &d_thr=epsilon)
 {
-    if(is_point_inside_rect({r_in[0], r_in[1]}, r_out) &&
-            is_point_inside_rect({r_in[2], r_in[3]}, r_out))
+    if(is_point_inside_rect({r_in[0], r_in[1]}, r_out, d_thr) &&
+            is_point_inside_rect({r_in[2], r_in[3]}, r_out, d_thr))
         return true;
     else
         return false;
@@ -109,6 +109,8 @@ static Vector3f get_altitude_color(const double& h)
         colors.push_back(Vector3f(62/255.0, 102/255.0, 106/255.0));
 
         std::reverse(colors.begin(), colors.end());
+
+
     }
 
     if(h2c.empty())
@@ -138,6 +140,11 @@ static Vector3f get_altitude_color(const double& h)
             hc[0] = h;
             hc[1] = h2c.size();
             h2c.push_back(hc);
+            while(colors.size() <= h2c.size())
+                colors.push_back(Vector3f(utility::random_number_f(0,1),
+                                          utility::random_number_f(0,1),
+                                          utility::random_number_f(0,1)));
+
             c = colors[h2c.size()];
         }
     }

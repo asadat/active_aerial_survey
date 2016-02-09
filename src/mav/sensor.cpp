@@ -14,7 +14,7 @@ sensor::~sensor()
 {
 }
 
-void sensor::sense(const Vector3f &p, std::function<void(void)> callback)
+void sensor::sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr>&)> callback)
 {
     std::thread sensing_thread([this, p, callback]()
     {
@@ -25,7 +25,7 @@ void sensor::sense(const Vector3f &p, std::function<void(void)> callback)
     sensing_thread.detach();
 }
 
-void sensor::perform_sense(Vector3f p, std::function<void(void)> callback)
+void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::ptr>&)> callback)
 {
     environment_model_.grid_mutex_.lock();
 
@@ -43,37 +43,37 @@ void sensor::perform_sense(Vector3f p, std::function<void(void)> callback)
         {
             Vector2f v(fp[0]+dx*(0.5+i), fp[1]+dy*(0.5+j));
 
-            auto cel = environment_model_.grid_->find_cell_contains(v);
-            if(cel)
+            auto cell = environment_model_.grid_->find_cell_contains(v);
+            if(cell)
             {
-                //ROS_INFO("sensing (%d %d)", cel->get_index()[0], cel->get_index()[1]);
+
                 double x[] = {v[0],v[1]};
-                std::normal_distribution<> dist(cel->get_ground_truth_value(), active_survey_param::gp_sigma);
+                std::normal_distribution<> dist(cell->get_ground_truth_value(), active_survey_param::gp_sigma);
                 gaussian_field::instance()->add_pattern(x, dist(e2));
             }
         }
 
-    //ROS_INFO("sensing time (1): %f", (ros::Time::now()-t0).toSec());
-    //t0 = ros::Time::now();
 
     rect update_rect = fp;
-    update_rect += rect(-15,-15,15,15);
+    //update_rect += rect(-15,-15,15,15);
 
     std::set<grid_cell::ptr> update_cells;
     environment_model_.grid_->find_cells_in_rect(update_rect, update_cells, false);
 
     for(auto it=update_cells.begin(); it!=update_cells.end(); it++)
     {
-        //ROS_INFO("updating (%d %d)", (*it)->get_index()[0], (*it)->get_index()[1]);
+        grid_cell::ptr cell = *it;
 
-        double x[] = {(*it)->get_center()[0],(*it)->get_center()[1]};
-        (*it)->set_estimated_value(gaussian_field::instance()->f(x));
-        (*it)->set_variance(gaussian_field::instance()->var(x));
+        if(cell->is_inside(fp))
+            cell->set_covered(true);
+
+        double x[] = {cell->get_center()[0],cell->get_center()[1]};
+        cell->set_estimated_value(gaussian_field::instance()->f(x));
+        cell->set_variance(gaussian_field::instance()->var(x));
     }
 
-    //ROS_INFO("sensing time (2): %f", (ros::Time::now()-t0).toSec());
 
-    callback();
+    callback(update_cells);
 
     environment_model_.grid_mutex_.unlock();
 }
@@ -82,6 +82,11 @@ rect sensor::get_rect(const Vector3f &p) const
 {
     Vector2f l(p[2]*tan(0.5*active_survey_param::FOV), p[2]*tan(0.5*active_survey_param::FOV));
     return {p[0]-l[0], p[1]-l[1], p[0]+l[0], p[1]+l[1]};
+}
+
+void sensor::draw()
+{
+
 }
 
 }

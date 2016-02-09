@@ -16,6 +16,7 @@ set(aas_SOURCES
     src/environment_model/grid_cell.cpp
     src/environment_model/grid.cpp
     src/environment_model/gaussian_field.cpp
+    src/environment_model/grid_segment.cpp
     src/mav/sensor.cpp
     src/mav/mav.cpp
     src/mav/mav_controller.cpp
@@ -35,6 +36,7 @@ set(aas_SOURCES
     include/mav/sensor.h
     include/environment_model/random_environment_generator.h
     include/environment_model/gaussian_field.h
+    include/environment_model/grid_segment.h
     include/environment_model/grid_cell.h
     include/environment_model/grid.h
     include/environment_model/environment_model.h

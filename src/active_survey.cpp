@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include "active_survey.h"
 #include "GL/glut.h"
 #include "environment_model/environment_model.h"
@@ -18,7 +18,10 @@ active_survey::active_survey(int argc, char **argv):
     ros::NodeHandle private_node_handle_("~");
     active_survey_param::GetParams(private_node_handle_);
 
-    mav_ = std::shared_ptr<mav>(new mav(*environment_model::instance(), {0,0,10}));
+
+    mav_ = std::shared_ptr<mav>(new mav(*environment_model::instance(), {-0.5f*static_cast<float>(active_survey_param::area_width),
+                                                                         -0.5f*static_cast<float>(active_survey_param::area_height),
+                                                                         10.0f}));
 
     if(active_survey_param::logging)
     {
@@ -136,7 +139,7 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
     else if(key['2'])
     {
         active_survey_param::non_ros::cell_drawing_mode+=1;
-        active_survey_param::non_ros::cell_drawing_mode %= 4;
+        active_survey_param::non_ros::cell_drawing_mode %= 6;
         updateKey = false;
     }
     else if(key[']'])
@@ -153,6 +156,16 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
     else if(key['p'])
     {
         mav_->sense();
+        updateKey = false;
+    }
+    else if(key['='])
+    {
+        active_survey_param::speed += 0.5;
+        updateKey = false;
+    }
+    else if(key['-'])
+    {
+        active_survey_param::speed -= 0.5;
         updateKey = false;
     }
 

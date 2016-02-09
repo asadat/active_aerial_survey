@@ -42,7 +42,6 @@ public:
 private:
     active_survey(int argc, char **argv);
     void setup_log_file();
-    Vector3f get_color(double h);
 
     std::shared_ptr<mav> mav_;
     static std::shared_ptr<active_survey> instance_;

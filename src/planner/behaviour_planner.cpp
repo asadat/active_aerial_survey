@@ -67,8 +67,19 @@ waypoint::ptr behaviour_planner::get_next_waypoint()
     }
 }
 
-void behaviour_planner::sensing_callback()
+void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells)
 {
+    for(auto it=covered_cells.begin(); it!=covered_cells.end(); it++)
+    {
+        grid_cell::ptr cell = *it;
+        if(cell->is_target() && !cell->has_label())
+        {
+            grid_segment::ptr gs(new grid_segment(mav_.get_grid(), cell, grid_cell_base::generate_label()));
+            gs->grow();
+            segments_.push_back(gs);
+        }
+    }
+
     if(active_survey_param::policy == "greedy")
         greedy();
     else if(active_survey_param::policy == "delayed_greedy")

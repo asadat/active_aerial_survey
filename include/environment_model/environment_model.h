@@ -34,6 +34,7 @@ private:
     std::shared_ptr<grid> grid_;
     std::mutex grid_mutex_;
 
+    friend class mav;
     friend class sensor;
     friend class random_environment_generator;
 };

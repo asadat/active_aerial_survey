@@ -1,10 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <set>
+
+#include "environment_model/grid_cell.h"
+#include "environment_model/grid_segment.h"
 #include "planner/plan.h"
 
 namespace asn
 {
+
 class mav;
 
 class behaviour_planner
@@ -19,7 +24,7 @@ public:
     waypoint::ptr get_next_waypoint();
 
     void draw();
-    void sensing_callback();
+    void sensing_callback(std::set<grid_cell::ptr>& covered_cells);
 
 private:
     void greedy();
@@ -32,6 +37,7 @@ private:
     mav &mav_;
     plan plan_;
 
+    std::vector<grid_segment::ptr> segments_;
     waypoint::ptr last_waypoint;
 };
 

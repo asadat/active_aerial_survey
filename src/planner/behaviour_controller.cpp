@@ -21,10 +21,10 @@ void behaviour_controller::update(const double &dt)
     if(!mav_.at_goal())
     {
         mav_.update_state(dt);
-        if((last_sensing_pos_-mav_.get_position()).squaredNorm() > active_survey_param::min_footprint*50*active_survey_param::min_footprint*5)
+        if((last_sensing_pos_-mav_.get_position()).squaredNorm() > active_survey_param::min_footprint*5*active_survey_param::min_footprint*5)
         {
             last_sensing_pos_ = mav_.get_position();
-            mav_.sensor_.sense(mav_.get_position(), [this](){this->behaviour_planner_->sensing_callback();});
+            mav_.sensor_.sense(mav_.get_position(), [this](std::set<grid_cell::ptr>& covered_cells){this->behaviour_planner_->sensing_callback(covered_cells);});
         }
     }
     else
