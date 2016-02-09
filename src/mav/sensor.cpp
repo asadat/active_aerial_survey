@@ -16,6 +16,8 @@ sensor::~sensor()
 
 void sensor::sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr>&)> callback)
 {
+    sensing_locations_.push_back(p);
+
     std::thread sensing_thread([this, p, callback]()
     {
         //auto t0 = ros::Time::now();
@@ -86,7 +88,12 @@ rect sensor::get_rect(const Vector3f &p) const
 
 void sensor::draw()
 {
-
+    glColor3f(1,1,0);
+    glPointSize(5);
+    glBegin(GL_POINTS);
+    for(auto &p: sensing_locations_)
+        utility::gl_vertex3f(p);
+    glEnd();
 }
 
 }

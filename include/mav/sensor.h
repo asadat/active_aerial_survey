@@ -21,6 +21,7 @@ private:
     rect get_rect(const Vector3f &p) const;
 
     environment_model &environment_model_;
+    std::vector<Vector3f> sensing_locations_;
 
     friend class mav;
 
