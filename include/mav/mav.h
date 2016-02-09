@@ -32,6 +32,7 @@ public:
     void update(const double &dt);
     bool at_goal();
     void stop();
+    void resume();
 
     void draw();
 
@@ -47,6 +48,7 @@ private:
     mav_controller mav_controller_;
     behaviour_controller::ptr behaviour_controller_;
 
+    bool stop_;
     const double goal_reached_threshold_;
 
     friend class behaviour_controller;

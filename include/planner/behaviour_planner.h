@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <set>
+#include <map>
 
 #include "environment_model/grid_cell.h"
 #include "environment_model/grid_segment.h"
@@ -37,7 +37,7 @@ private:
     mav &mav_;
     plan plan_;
 
-    std::vector<grid_segment::ptr> segments_;
+    std::map<grid_cell_base::label, grid_segment::ptr> segments_;
     waypoint::ptr last_waypoint;
 };
 

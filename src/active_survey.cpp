@@ -168,6 +168,14 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
         active_survey_param::speed -= 0.5;
         updateKey = false;
     }
+    else if(key['o'])
+    {
+        mav_->stop();
+    }
+    else if(key['i'])
+    {
+        mav_->resume();
+    }
 
 //    else if(key['w'])
 //    {

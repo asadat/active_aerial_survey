@@ -11,6 +11,7 @@ mav::mav(environment_model &em, const Vector3f &position):
     velocity_(0,0,0),
     goal_(position),
     mav_controller_(),
+    stop_(true),
     goal_reached_threshold_(0.5)
 {
     behaviour_controller_ = behaviour_controller::ptr(new behaviour_controller(*this));
@@ -25,7 +26,8 @@ void mav::sense()
 
 void mav::update(const double &dt)
 {
-    behaviour_controller_->update(dt);
+    if(!stop_)
+        behaviour_controller_->update(dt);
 }
 
 void mav::update_state(const double &dt)
@@ -41,7 +43,13 @@ bool mav::at_goal()
 
 void mav::stop()
 {
-    set_goal(position_);
+    stop_ = true;
+    //set_goal(position_);
+}
+
+void mav::resume()
+{
+    stop_ = false;
 }
 
 void mav::draw()

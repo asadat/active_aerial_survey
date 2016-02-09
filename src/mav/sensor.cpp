@@ -66,8 +66,7 @@ void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::pt
     {
         grid_cell::ptr cell = *it;
 
-        if(cell->is_inside(fp))
-            cell->set_covered(true);
+        cell->set_covered(true);
 
         double x[] = {cell->get_center()[0],cell->get_center()[1]};
         cell->set_estimated_value(gaussian_field::instance()->f(x));

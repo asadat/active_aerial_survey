@@ -75,8 +75,16 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
         if(cell->is_target() && !cell->has_label())
         {
             grid_segment::ptr gs(new grid_segment(mav_.get_grid(), cell, grid_cell_base::generate_label()));
-            gs->grow();
-            segments_.push_back(gs);
+            gs->grow([this](const grid_cell_base::label &l) -> grid_segment::ptr
+            {
+                auto it = this->segments_.find(l);
+                if(it != segments_.end())
+                    return it->second;
+                else
+                    return nullptr;
+            });
+
+            segments_.insert(std::pair<grid_cell_base::label, grid_segment::ptr>(cell->get_label(), gs));
         }
     }
 
@@ -90,29 +98,54 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
 
 void behaviour_planner::draw()
 {
-    if(plan_.empty())
-        return;
-
-    glLineWidth(3);
-    glColor3f(0.1,0.7, 0.3);
-    glBegin(GL_LINES);
-
-    auto it=plan_.begin();
-
-    utility::gl_vertex3f((*it)->get_position());
-
-    for(it++; it!=plan_.end(); it++)
+    if(!plan_.empty())
     {
+        glLineWidth(3);
+        glColor3f(0.1,0.7, 0.3);
+        glBegin(GL_LINES);
+
+        auto it=plan_.begin();
+
         utility::gl_vertex3f((*it)->get_position());
-        utility::gl_vertex3f((*it)->get_position());
+
+        for(it++; it!=plan_.end(); it++)
+        {
+            utility::gl_vertex3f((*it)->get_position());
+            utility::gl_vertex3f((*it)->get_position());
+        }
+
+        if(last_waypoint)
+        {
+            utility::gl_vertex3f(last_waypoint->get_position());
+        }
+
+        glEnd();
     }
 
-    if(last_waypoint)
-    {
-        utility::gl_vertex3f(last_waypoint->get_position());
-    }
 
-    glEnd();
+    for(auto it= segments_.begin(); it!=segments_.end(); it++)
+    {
+        grid_segment::ptr sg = it->second;
+        auto some_cell_center = (*sg->begin())->get_center();
+
+        glColor3f(0.2, 0.2, 1);
+        glPointSize(9);
+        glBegin(GL_POINTS);
+        utility::gl_vertex3f(some_cell_center, 0.2);
+        glEnd();
+
+        glColor3f(0,.3,1);
+        glLineWidth(3);
+        glBegin(GL_LINES);
+        for(auto i=sg->begin_neighbour(); i!=sg->end_neighbour(); i++)
+        {
+            grid_segment::ptr sg_n = segments_[*i];
+
+            utility::gl_vertex3f(some_cell_center, 0.2);
+            utility::gl_vertex3f((*sg_n->begin())->get_center(), 0.2);
+        }
+        glEnd();
+    }
 }
 
 void behaviour_planner::greedy()

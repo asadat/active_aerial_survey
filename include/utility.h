@@ -79,6 +79,11 @@ static void gl_vertex3f(const Vector3f& v)
     glVertex3f(v[0], v[1], v[2]);
 }
 
+static void gl_vertex3f(const Vector2f& v, const double & z)
+{
+    glVertex3f(v[0], v[1], z);
+}
+
 static void draw_quad(const rect &r)
 {
     glVertex2f(r[0],r[1]);
