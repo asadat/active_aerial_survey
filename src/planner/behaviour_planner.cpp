@@ -9,7 +9,7 @@ behaviour_planner::behaviour_planner(mav &m):
     mav_(m),
     last_waypoint(nullptr)
 {
-    //generate_test_waypoint();
+    graph_ = std::make_shared<graph>();
     generate_coarse_survey();
 }
 
@@ -75,18 +75,30 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
         if(cell->is_target() && !cell->has_label())
         {
             grid_segment::ptr gs(new grid_segment(mav_.get_grid(), cell, grid_cell_base::generate_label()));
+            segments_.insert(std::pair<grid_cell_base::label, grid_segment::ptr>(cell->get_label(), gs));
+
             gs->grow([this](const grid_cell_base::label &l) -> grid_segment::ptr
             {
                 auto it = this->segments_.find(l);
                 if(it != segments_.end())
                     return it->second;
                 else
+                {
+                    ROS_WARN("unregistered label requested !!!!");
                     return nullptr;
+                }
             });
 
-            segments_.insert(std::pair<grid_cell_base::label, grid_segment::ptr>(cell->get_label(), gs));
+            graph_->add_node(std::static_pointer_cast<graph_node>(gs));
         }
     }
+
+    components_mutex_.lock();
+
+    components_.clear();
+    graph::get_components(graph_, components_);
+
+    components_mutex_.unlock();
 
     if(active_survey_param::policy == "greedy")
         greedy();
@@ -122,30 +134,12 @@ void behaviour_planner::draw()
         glEnd();
     }
 
-
-    for(auto it= segments_.begin(); it!=segments_.end(); it++)
+    components_mutex_.lock();
+    for(auto &c: components_)
     {
-        grid_segment::ptr sg = it->second;
-        auto some_cell_center = (*sg->begin())->get_center();
-
-        glColor3f(0.2, 0.2, 1);
-        glPointSize(9);
-        glBegin(GL_POINTS);
-        utility::gl_vertex3f(some_cell_center, 0.2);
-        glEnd();
-
-        glColor3f(0,.3,1);
-        glLineWidth(3);
-        glBegin(GL_LINES);
-        for(auto i=sg->begin_neighbour(); i!=sg->end_neighbour(); i++)
-        {
-            grid_segment::ptr sg_n = segments_[*i];
-
-            utility::gl_vertex3f(some_cell_center, 0.2);
-            utility::gl_vertex3f((*sg_n->begin())->get_center(), 0.2);
-        }
-        glEnd();
+        c->draw();
     }
+    components_mutex_.unlock();
 }
 
 void behaviour_planner::greedy()

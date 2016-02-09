@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <map>
+#include <mutex>
 
+#include "math/graph.h"
 #include "environment_model/grid_cell.h"
 #include "environment_model/grid_segment.h"
 #include "planner/plan.h"
@@ -39,6 +41,10 @@ private:
 
     std::map<grid_cell_base::label, grid_segment::ptr> segments_;
     waypoint::ptr last_waypoint;
+
+    std::mutex components_mutex_;
+    std::vector<graph::ptr> components_;
+    graph::ptr  graph_;
 };
 
 }

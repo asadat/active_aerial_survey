@@ -6,6 +6,7 @@ namespace asn
 {
 
 grid_segment::grid_segment(grid &grd, grid_cell::ptr seed_cell, grid_cell_base::label label):
+    graph_node(),
     grid_(grd)
 {
     cells_.insert(seed_cell);
@@ -38,7 +39,11 @@ void grid_segment::grow(std::function<grid_segment::ptr(grid_cell_base::label)> 
             {
                 if(nc->has_label())
                 {
-                    neighbours_.insert(nc->get_label());
+                    if(nc->get_label() != label)
+                    {
+                        add_edge(std::static_pointer_cast<graph_node>(segments_accessor(label)),
+                                 std::static_pointer_cast<graph_node>(segments_accessor(nc->get_label())));
+                    }
                     continue;
                 }
 

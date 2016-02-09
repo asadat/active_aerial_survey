@@ -6,6 +6,8 @@ FIND_PACKAGE(Eigen3 3.0.1 REQUIRED)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -o3 ${CMAKE_CXX_FLAGS} -g -Wall")
 
+#add_definitions(GL_VISUALIZATION)
+
 set(aas_LIBRARIES GL GLU glut gp)
 
 set(aas_SOURCES
@@ -25,6 +27,10 @@ set(aas_SOURCES
     src/planner/waypoint.cpp
     src/planner/plan.cpp
     src/math/polygon.cpp
+    src/math/graph_node.cpp
+    src/math/graph.cpp
+    include/math/graph.h
+    include/math/graph_node.h
     include/math/polygon.h
     include/planner/trajectory_planner.h
     include/planner/plan.h
@@ -43,6 +49,7 @@ set(aas_SOURCES
     include/active_survey.h    
     include/active_survey_param.h
     include/utility.h
+
 )
 
 
