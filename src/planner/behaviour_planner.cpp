@@ -47,7 +47,7 @@ void behaviour_planner::generate_coarse_survey()
         waypoint::ptr wp = std::make_shared<waypoint>(tp);
         wp->set_waypoint_call_back([](waypoint::ptr wp_ptr)
         {
-            ROS_INFO("Waypoint callback: reached test waypoint %f %f %f",
+            ROS_INFO("WP CB: %f %f %f",
                     wp_ptr->get_position()[0],
                     wp_ptr->get_position()[1],
                     wp_ptr->get_position()[2]);
@@ -86,15 +86,19 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
 
     ROS_INFO("#unprocessed cells: %ld", covered_cells_.size());
 
-    if(covered_cells_.size() < 1000)
-        return;
-
-    for(auto cell:covered_cells_)
+    if(covered_cells_.size()%500 < 100)
     {
-        double x[] = {cell->get_center()[0],cell->get_center()[1]};
-        cell->set_estimated_value(gaussian_field::instance()->f(x));
-        cell->set_variance(gaussian_field::instance()->var(x));
+        for(auto it =mav_.get_grid().begin(); it!=mav_.get_grid().end(); ++it)
+        {
+            auto &cell = *it;
+            double x[] = {cell->get_center()[0],cell->get_center()[1]};
+            cell->set_estimated_value(gaussian_field::instance()->f(x));
+            cell->set_variance(gaussian_field::instance()->var(x));
+        }
     }
+
+    if(covered_cells_.size() < 9800)
+        return;
 
     for(auto cell:covered_cells_)
     {        

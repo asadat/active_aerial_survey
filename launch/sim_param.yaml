@@ -23,4 +23,4 @@ average_speed: 1.0
 turning_time: 5.0
 lm_tracks: 8
 random_seed: -1
-gp_sigma: 0.2
+gp_sigma: 0.01

@@ -33,6 +33,11 @@ static double distance_squared(const Vector3f &a, const Vector3f &b)
     return (a-b).squaredNorm();
 }
 
+static double distance(const Vector3f &a, const Vector3f &b)
+{
+    return (a-b).norm();
+}
+
 static double point_to_line_distance(Vector2f p1, Vector2f p2, Vector2f x)
 {
     double d = fabs((p2[0]-p1[0])*(p1[1]-x[1]) - (p1[0]-x[0])*(p2[1]-p1[1]))/sqrt((p2[0]-p1[0])*(p2[0]-p1[0])+(p2[1]-p1[1])*(p2[1]-p1[1]));

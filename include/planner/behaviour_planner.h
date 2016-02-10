@@ -28,6 +28,8 @@ public:
     void draw();
     void sensing_callback(std::set<grid_cell::ptr>& covered_cells);
 
+    void set_get_available_time(std::function<double(void)> f){get_available_time = f;}
+
 private:
     void greedy();
     void semi_greedy();
@@ -46,6 +48,8 @@ private:
     std::mutex components_mutex_;
     std::vector<graph::ptr> components_;
     graph::ptr  graph_;
+
+    std::function<double(void)> get_available_time;
 };
 
 }

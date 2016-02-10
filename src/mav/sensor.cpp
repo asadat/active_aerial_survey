@@ -27,16 +27,32 @@ void sensor::sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr
     sensing_thread.detach();
 }
 
+grid_cell::ptr sensor::sense_cell(const Vector2f &p)
+{
+    static std::random_device rd;
+    static std::mt19937 e2(rd());
+
+    auto cell = environment_model_.grid_->find_cell_contains(p);
+    if(cell)
+    {
+        auto v = cell->get_center();
+        double x[] = {v[0],v[1]};
+        std::normal_distribution<> dist(cell->get_ground_truth_value(), active_survey_param::gp_sigma);
+        gaussian_field::instance()->add_pattern(x, dist(e2));
+    }
+    return cell;
+}
+
 void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::ptr>&)> callback)
 {
     environment_model_.grid_mutex_.lock();
 
     //auto t0 = ros::Time::now();
 
-    std::random_device rd;
-    std::mt19937 e2(rd());
+
     auto fp = get_rect(p);
 
+    Vector2f center(0,0);
     const int n = 2;
     double dx = fabs(fp[0]-fp[2])/n;
     double dy = fabs(fp[1]-fp[3])/n;
@@ -44,17 +60,20 @@ void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::pt
         for(int j=0; j<n; j++)
         {
             Vector2f v(fp[0]+dx*(0.5+i), fp[1]+dy*(0.5+j));
+            center += v;
+            sense_cell(v);
+//            auto cell = environment_model_.grid_->find_cell_contains(v);
+//            if(cell)
+//            {
 
-            auto cell = environment_model_.grid_->find_cell_contains(v);
-            if(cell)
-            {
-
-                double x[] = {v[0],v[1]};
-                std::normal_distribution<> dist(cell->get_ground_truth_value(), active_survey_param::gp_sigma);
-                gaussian_field::instance()->add_pattern(x, dist(e2));
-            }
+//                double x[] = {v[0],v[1]};
+//                std::normal_distribution<> dist(cell->get_ground_truth_value(), active_survey_param::gp_sigma);
+//                gaussian_field::instance()->add_pattern(x, dist(e2));
+//            }
         }
 
+//    center *= 0.25;
+//    sense_cell(center);
 
     rect update_rect = fp;
     //update_rect += rect(-15,-15,15,15);
@@ -87,6 +106,7 @@ rect sensor::get_rect(const Vector3f &p) const
 
 void sensor::draw()
 {
+    gaussian_field::instance()->draw();
     glColor3f(1,1,0);
     glPointSize(5);
     glBegin(GL_POINTS);

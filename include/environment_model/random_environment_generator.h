@@ -53,7 +53,7 @@ public:
         }
 
 
-        int d=5;
+        int d=0;
         for(auto it=environment.grid_->begin(); it != environment.grid_->end(); it++)
         {
             double p=0;
