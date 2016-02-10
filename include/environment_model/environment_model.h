@@ -11,11 +11,15 @@ namespace asn
 
 class environment_model
 {
+    struct dummy_{};
+
 public:
+    environment_model(const dummy_ &d);
+
     static std::shared_ptr<environment_model> instance()
     {
         if(!instance_)
-            instance_ = std::shared_ptr<environment_model>(new environment_model());
+            instance_ = environment_model::make();
         return instance_;
     }
 
@@ -27,9 +31,13 @@ public:
     void draw();
     void get_environment_polygon(polygon &poly);
 
+    static std::shared_ptr<environment_model> make()
+    {
+        return std::make_shared<environment_model>(dummy_());
+    }
+
 private:
     static std::shared_ptr<environment_model> instance_;
-    environment_model();
 
     std::shared_ptr<grid> grid_;
     std::mutex grid_mutex_;

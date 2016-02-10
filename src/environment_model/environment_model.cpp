@@ -7,7 +7,7 @@ namespace asn
 
 std::shared_ptr<environment_model> environment_model::instance_;
 
-environment_model::environment_model()
+environment_model::environment_model(const dummy_ &dummy)
 {
     size2i s(active_survey_param::area_width/active_survey_param::min_footprint,
              active_survey_param::area_height/active_survey_param::min_footprint);

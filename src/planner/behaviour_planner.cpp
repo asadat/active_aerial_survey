@@ -81,12 +81,12 @@ waypoint::ptr behaviour_planner::get_next_waypoint()
 
 void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells)
 {
-    for(auto it=covered_cells.begin(); it!=covered_cells.end(); it++)
-    {
-        grid_cell::ptr cell = *it;
+    for(auto cell:covered_cells)
+    {        
         if(cell->is_target() && !cell->has_label())
         {
-            grid_segment::ptr gs(new grid_segment(mav_.get_grid(), cell, grid_cell_base::generate_label()));
+            grid_segment::ptr gs = std::make_shared<grid_segment>(mav_.get_grid(), cell, grid_cell_base::generate_label());
+
             segments_.insert(std::pair<grid_cell_base::label, grid_segment::ptr>(cell->get_label(), gs));
 
             gs->grow([this](const grid_cell_base::label &l) -> grid_segment::ptr

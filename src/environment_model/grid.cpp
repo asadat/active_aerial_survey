@@ -19,7 +19,8 @@ grid::grid(const Vector2f &center, const size2f &cell_size, const size2i &size):
     for(int j=0; j<size_[1]; j++)
         for(int i=0; i<size_[0]; i++)
         {
-            auto cell = grid_cell::ptr(new grid_cell(ll+ size2f(i*cell_size_[0], j*cell_size_[1]), cell_size_, grid_index(i,j)));
+            //auto cell = grid_cell::ptr(new grid_cell(ll+ size2f(i*cell_size_[0], j*cell_size_[1]), cell_size_, grid_index(i,j)));
+            auto cell = std::make_shared<grid_cell>(ll+ size2f(i*cell_size_[0], j*cell_size_[1]), cell_size_, grid_index(i,j));
             cells_.push_back(cell);
         }
 }
