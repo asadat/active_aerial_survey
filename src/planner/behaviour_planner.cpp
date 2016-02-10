@@ -79,29 +79,43 @@ waypoint::ptr behaviour_planner::get_next_waypoint()
     }
 }
 
+void behaviour_planner::update_grid_gp()
+{
+    for(auto it =mav_.get_grid().begin(); it!=mav_.get_grid().end(); ++it)
+    {
+        auto &cell = *it;
+        double x[] = {cell->get_center()[0],cell->get_center()[1]};
+        cell->set_estimated_value(gaussian_field::instance()->f(x));
+        cell->set_variance(gaussian_field::instance()->var(x));
+    }
+}
+
 void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells)
 {
     for(auto cell:covered_cells)
         covered_cells_.insert(cell);
 
-    ROS_INFO("#unprocessed cells: %ld", covered_cells_.size());
+   // ROS_INFO("#unprocessed cells: %ld", covered_cells_.size());
 
-    if(covered_cells_.size()%500 < 100)
+    if(covered_cells_.size() > mav_.get_grid().cells_count()*active_survey_param::exploitation_rate)
     {
-        for(auto it =mav_.get_grid().begin(); it!=mav_.get_grid().end(); ++it)
-        {
-            auto &cell = *it;
-            double x[] = {cell->get_center()[0],cell->get_center()[1]};
-            cell->set_estimated_value(gaussian_field::instance()->f(x));
-            cell->set_variance(gaussian_field::instance()->var(x));
-        }
+
+        update_grid_gp();
+        update_segments();
+
+        if(active_survey_param::policy == "greedy")
+            greedy();
+        else if(active_survey_param::policy == "delayed_greedy")
+            semi_greedy();
+        else
+            two_stage();
     }
+}
 
-    if(covered_cells_.size() < 9800)
-        return;
-
+void behaviour_planner::update_segments()
+{
     for(auto cell:covered_cells_)
-    {        
+    {
         if(cell->is_target() && !cell->has_label())
         {
             grid_segment::ptr gs = std::make_shared<grid_segment>(mav_.get_grid(), cell, grid_cell_base::generate_label());
@@ -115,7 +129,10 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
                     return it->second;
                 else
                 {
-                    ROS_WARN("unregistered label requested !!!!");
+                    ROS_WARN("unregistered label requested %u !!!!", l);
+                    for(auto pr:segments_)
+                        ROS_WARN("SEGMENT: %u", pr.second->get_label());
+
                     return nullptr;
                 }
             });
@@ -130,18 +147,38 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
     components_mutex_.lock();
 
     components_.clear();
+
     graph::get_components(graph_, components_);
+
+    if(!components_.empty())
+    {
+        for(auto cit=components_.begin(); cit!=components_.end(); ++cit)
+        {
+            graph::ptr component = *cit;
+            ROS_INFO("merging component size: %ld", component->size());
+            auto s_it=component->begin();
+            grid_segment::ptr first_segment = std::static_pointer_cast<grid_segment>(*s_it);
+
+            while(component->size()>1)
+            {
+                auto seg_it = component->begin();
+                ++seg_it;
+                grid_segment::ptr mergin_seg = std::static_pointer_cast<grid_segment>(*seg_it);
+                segments_.erase(mergin_seg->get_label());
+
+                ROS_WARN("mergin %u with %u", first_segment->get_label(), mergin_seg->get_label());
+                grid_segment::merge_with_segment(first_segment, mergin_seg, graph_);
+                component->remove_left_alone_node(*seg_it);
+            }
+
+            ROS_INFO("finished merging component size: %ld", component->size());
+        }
+    }
 
     components_mutex_.unlock();
 
     covered_cells_.clear();
 
-    if(active_survey_param::policy == "greedy")
-        greedy();
-    else if(active_survey_param::policy == "delayed_greedy")
-        semi_greedy();
-    else
-        two_stage();
 }
 
 void behaviour_planner::draw()
@@ -169,17 +206,14 @@ void behaviour_planner::draw()
             utility::gl_vertex3f((*it)->get_position());
         }
 
-
         glEnd();
     }
 
 
     components_mutex_.lock();
-//    for(auto &c: components_)
-//    {
-//        c->draw();
-//    }
 
+//    for(auto c:components_)
+//        c->draw();
     for(auto &gsp:segments_)
     {
         grid_segment::ptr gs = gsp.second;
@@ -197,7 +231,7 @@ void behaviour_planner::draw()
 
 void behaviour_planner::greedy()
 {
-
+    //plan_sensing_tour();
 }
 
 void behaviour_planner::semi_greedy()

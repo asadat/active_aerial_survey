@@ -4,6 +4,21 @@
 namespace asn
 {
 
+void graph::merge_nodes(graph_node::ptr u, graph_node::ptr merging_node)
+{
+    for(graph_node::ptr nb: merging_node->neighbours_)
+    {
+        nb->neighbours_.erase(merging_node);
+        if(nb != u)
+        {
+           graph_node::add_edge(u, nb);
+        }
+    }
+
+    merging_node->neighbours_.clear();
+    nodes_.erase(merging_node);
+}
+
 void graph::get_components(const ptr &g, std::vector<ptr> &components)
 {
     g->reset_nodes_flags();

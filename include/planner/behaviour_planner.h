@@ -38,6 +38,12 @@ private:
     void generate_coarse_survey();
     void generate_test_waypoints();
 
+    void update_segments();
+    void update_grid_gp();
+
+    void plan_sensing_tour(std::vector<graph::ptr> &components, const Vector3f &pos,
+                           const double &available_flight_time, plan & cur_plan);
+
     mav &mav_;
     plan plan_;
 
@@ -47,6 +53,8 @@ private:
     std::set<grid_cell::ptr> covered_cells_;
     std::mutex components_mutex_;
     std::vector<graph::ptr> components_;
+    std::vector<graph::ptr> planned_components_;
+
     graph::ptr  graph_;
 
     std::function<double(void)> get_available_time;

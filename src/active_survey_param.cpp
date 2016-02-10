@@ -45,6 +45,7 @@ double active_survey_param::time_limit = 600.0;
 int active_survey_param::lm_tracks = 4;
 double active_survey_param::random_seed = -1;
 double active_survey_param::gp_sigma = 0.1;
+double active_survey_param::exploitation_rate = 0.1;
 
 int active_survey_param::non_ros::cell_drawing_mode = 0;
 
@@ -96,6 +97,7 @@ void active_survey_param::GetParams(ros::NodeHandle &nh)
     nh.param<int>("lm_tracks", lm_tracks, 4);
     nh.param<double>("random_seed", random_seed, -1.0);
     nh.param<double>("gp_sigma", gp_sigma, 0.1);
+    nh.param<double>("exploitation_rate", exploitation_rate, 0.1);
 
 
 }

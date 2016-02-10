@@ -62,6 +62,7 @@ public:
 
     static double random_seed;
     static double gp_sigma;
+    static double exploitation_rate;
 
     class non_ros
     {

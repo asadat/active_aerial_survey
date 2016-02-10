@@ -70,7 +70,7 @@ void behaviour_controller::update_available_flight_time(bool turning_point)
 
     last_pos_flight_time_update = mav_pos;
 
-    ROS_INFO_THROTTLE(2,"flight time: %f", avaiable_flight_time_);
+    //ROS_INFO_THROTTLE(2,"flight time: %f", avaiable_flight_time_);
 }
 
 void behaviour_controller::update(const double &dt)

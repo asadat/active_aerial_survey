@@ -36,8 +36,8 @@ public:
     inline bool is_checked_for_skinny() const {return checked_for_skinny_;}
     inline void set_checked_for_skinny(bool checked_for_skinny){checked_for_skinny_=checked_for_skinny;}
 
-    inline bool is_visited() const {return visited_;}
-    inline void set_visited(bool visited){visited_=visited;}
+    inline bool is_sensed() const {return sensed_;}
+    inline void set_sensed(bool sensed){sensed_=sensed;}
 
     inline bool is_covered() const {return covered_;}
     inline void set_covered(bool covered){covered_=covered;}
@@ -56,7 +56,7 @@ public:
 
 protected:
     grid_cell_base():flags_(0), variance_(1), label_(0),
-        approx_label_(0), checked_for_skinny_(false), visited_(false), covered_(false) {}
+        approx_label_(0), checked_for_skinny_(false), sensed_(false), covered_(false) {}
 
     double ground_truth_value_;
     double estimated_value_;
@@ -69,7 +69,7 @@ protected:
      * This means that the cell has been sensed
      * with high resolution
      */
-    bool visited_;
+    bool sensed_;
 
     /* This variable indicated that this cell
      * has been covered in the coarse survey

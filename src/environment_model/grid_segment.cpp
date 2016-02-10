@@ -2,6 +2,7 @@
 
 #include "environment_model/grid_segment.h"
 #include "active_survey_param.h"
+#include "math/graph.h"
 
 using namespace std;
 
@@ -18,6 +19,15 @@ grid_segment::grid_segment(grid &grd, grid_cell::ptr seed_cell, grid_cell_base::
 
 grid_segment::~grid_segment()
 {}
+
+void grid_segment::clear()
+{
+    cells_.clear();
+    boundary_cells_.clear();
+    approximate_poly_cells_.clear();
+    approximate_polygon_.clear();
+    convexhull_.clear();
+}
 
 void grid_segment::grow(std::function<grid_segment::ptr(grid_cell_base::label)> segments_accessor)
 {
@@ -58,6 +68,29 @@ void grid_segment::grow(std::function<grid_segment::ptr(grid_cell_base::label)> 
             }
         }
     }
+}
+
+void grid_segment::merge_with_segment(ptr u, ptr merging_segment, graph::ptr &component)
+{
+    component->merge_nodes(std::static_pointer_cast<graph_node>(u),
+                          std::static_pointer_cast<graph_node>(merging_segment));
+
+    merging_segment->set_label(u->get_label());
+
+    for(auto it=merging_segment->cells_.begin();
+         it!=merging_segment->cells_.end();++it)
+        u->cells_.insert(*it);
+
+    merging_segment->clear();
+
+    u->find_approximate_polygon();
+    u->find_convexhull();
+}
+
+void grid_segment::set_label(grid_cell_base::label l)
+{
+    for(auto &c: cells_)
+        c->set_label(l);
 }
 
 int grid_segment::get_approximate_neighbours_count(grid_cell::ptr cell)

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "environment_model/grid.h"
-#include "math/graph_node.h"
+#include "math/graph.h"
+//#include "math/graph_node.h"
 #include "math/polygon.h"
 
 #include <set>
@@ -10,6 +11,8 @@
 
 namespace asn
 {
+
+//class graph;
 
 class grid_segment: public graph_node
 {
@@ -47,10 +50,15 @@ public:
 
     grid_cell_base::label get_label() const {return (*begin())->get_label();}
 
+    static void merge_with_segment(ptr u, ptr merging_segment, graph::ptr &component);
+
+    void clear();
+
 private:
     grid_segment()=delete;
     void remove_skinny_part(grid_cell::ptr cell);
     int get_approximate_neighbours_count(grid_cell::ptr cell);
+    void set_label(grid_cell_base::label l);
 
     grid &grid_;
     std::set<grid_cell::ptr> cells_;

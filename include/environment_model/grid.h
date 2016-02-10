@@ -42,6 +42,8 @@ public:
     inline bool valid_index(const grid_index& idx) const {return idx[0]>=0 && idx[0]<size_[0]
                                                   && idx[1]>=0 && idx[1]<size_[1];}
 
+    size_t cells_count() const {return cells_.size();}
+
 private:
     grid();
     std::vector<grid_cell::ptr> cells_;
