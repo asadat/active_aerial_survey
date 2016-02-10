@@ -154,10 +154,10 @@ void behaviour_planner::draw()
 
 
     components_mutex_.lock();
-    for(auto &c: components_)
-    {
-        //c->draw();
-    }
+//    for(auto &c: components_)
+//    {
+//        c->draw();
+//    }
 
     for(auto &gsp:segments_)
     {

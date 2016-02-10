@@ -250,43 +250,42 @@ void grid_segment::find_convexhull()
     }
 
     // first node is the bottom most node
-    size_t first=0;
-    for(unsigned int i=1; i<approximate_polygon_.size(); i++)
-        if(approximate_polygon_[first][1]> approximate_polygon_[i][1])
-            first = i;
+    auto first = std::min_element(approximate_polygon_.begin(), approximate_polygon_.end(),
+                                  [](const Vector2f &v, const Vector2f &u){return v[1]<u[1];});
 
-    convexhull_.push_back(approximate_polygon_[first]);
+    convexhull_.push_back(*first);
 
 
     //second node
-    size_t second=1;
-    Vector2f p1 = convexhull_[0] - Vector2f(-1, 0);
-    Vector2f p2 = convexhull_.back();
+    const Vector2f &p2 = convexhull_.front();
+    const Vector2f &p1 = p2 - Vector2f(-1, 0);
 
-    double ang = utility::angle(p1, p2, approximate_polygon_[1]);
-    for(size_t i=2; i<approximate_polygon_.size(); i++)
+    auto second = std::max_element(approximate_polygon_.begin(), approximate_polygon_.end(),
+                                   [&p1, &p2](const Vector2f &v, const Vector2f &u)
     {
-        double a = utility::angle(p1, p2, approximate_polygon_[i]);
-        if(a> ang)
-        {
-            ang = a;
-            second = i;
-        }
-    }
+        if(utility::close_enough(p2,u))
+            return false;
+        else if(utility::close_enough(p2,v))
+            return true;
 
-    convexhull_.push_back(approximate_polygon_[second]);
+        return utility::angle(p1, p2, v) < utility::angle(p1, p2, u);
+    });
+
+    convexhull_.push_back(*second);
 
     //check if the cells form a line a line
     bool is_line = true;
-    Vector2f p_0 = approximate_polygon_[0];
-    Vector2f p_1 = approximate_polygon_[1];
+    const Vector2f &p_0 = approximate_polygon_.front();
+    const Vector2f &p_1 = approximate_polygon_.back();
 
-    for(size_t i=2; i < approximate_polygon_.size() && is_line; i++)
+    for(auto it=approximate_polygon_.begin()+2; it!=approximate_polygon_.end(); it++)
     {
-        Vector2f p_n = approximate_polygon_[i];
+        auto &p_n = *it;
+
         if(fabs((p_0[1]-p_1[1])*(p_0[0]-p_n[0]) - (p_0[1]-p_n[1])*(p_0[0]-p_1[0])) > 0.01)
         {
             is_line = false;
+            break;
         }
     }
 
@@ -297,37 +296,34 @@ void grid_segment::find_convexhull()
     }
     else
     {
+        bool added_new_vertex = true;
         // the rest of the nodes
-        while(true)
+        while(added_new_vertex)
         {
-            //if(n++ > 100) return;
-            p1 = convexhull_[convexhull_.size()-2];
-            p2 = convexhull_.back();
-            int next = -1;
-            ang = -1;
-            for(size_t i=0; i<approximate_polygon_.size(); i++)
-            {
-                if(approximate_polygon_[i] == convexhull_.back())
-                    continue;
+            const auto &p1 = *(--(--convexhull_.end()));
+            const auto &p2 = convexhull_.back();
 
-                double a = utility::angle(p1, p2, approximate_polygon_[i]);
-                if(a> ang)
-                {
-                    ang = a;
-                    next = i;
-                }
-            }
+            const auto next = std::max_element(approximate_polygon_.begin(), approximate_polygon_.end(),
+                                         [&p1, &p2](const Vector2f &v, const Vector2f &u)
+              {
+                  if(utility::close_enough(p2,u))
+                      return false;
+                  else if(utility::close_enough(p2,v))
+                      return true;
 
-            if(next > -1)
+                  return utility::angle(p1, p2, v) < utility::angle(p1, p2, u);
+              });
+
+            if(next != approximate_polygon_.end())
             {
-                if(std::find(convexhull_.begin(), convexhull_.end(), approximate_polygon_[next]) != convexhull_.end())
-                    break;
+                if(std::find(convexhull_.begin(), convexhull_.end(), *next) != convexhull_.end())
+                   added_new_vertex=false;
                 else
-                    convexhull_.push_back(approximate_polygon_[next]);
+                    convexhull_.push_back(*next);
             }
             else
             {
-                break;
+                added_new_vertex = false;
             }
         }
 
@@ -357,15 +353,6 @@ void grid_segment::find_convexhull()
             }
         }
     }
-
-
-//    center = makeVector(0,0,0);
-//    for(size_t i=0; i < convexhull_.size(); i++)
-//    {
-//        center += convexhull_[i];
-//    }
-
-//    center = (1.0/(float)convexhull_.size())*center;
 
     std::reverse(convexhull_.begin(), convexhull_.end());
 }
