@@ -42,6 +42,7 @@ private:
     std::map<grid_cell_base::label, grid_segment::ptr> segments_;
     waypoint::ptr last_waypoint;
 
+    std::set<grid_cell::ptr> covered_cells_;
     std::mutex components_mutex_;
     std::vector<graph::ptr> components_;
     graph::ptr  graph_;

@@ -68,9 +68,9 @@ void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::pt
 
         cell->set_covered(true);
 
-        double x[] = {cell->get_center()[0],cell->get_center()[1]};
-        cell->set_estimated_value(gaussian_field::instance()->f(x));
-        cell->set_variance(gaussian_field::instance()->var(x));
+//        double x[] = {cell->get_center()[0],cell->get_center()[1]};
+//        cell->set_estimated_value(gaussian_field::instance()->f(x));
+//        cell->set_variance(gaussian_field::instance()->var(x));
     }
 
 

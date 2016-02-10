@@ -40,7 +40,7 @@ void behaviour_planner::generate_coarse_survey()
     mav_.environment_model_.get_environment_polygon(area_poly);
 
     trajectory_planner::trajectory t;
-    trajectory_planner::plan_coverage_rectangle(area_poly, t, {20.0, 20.0}, 10.0);
+    trajectory_planner::plan_coverage_rectangle(area_poly, t, {40.0, 40.0}, 20.0);
 
     for(auto &tp: t)
     {
@@ -82,6 +82,21 @@ waypoint::ptr behaviour_planner::get_next_waypoint()
 void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells)
 {
     for(auto cell:covered_cells)
+        covered_cells_.insert(cell);
+
+    ROS_INFO("#unprocessed cells: %ld", covered_cells_.size());
+
+    if(covered_cells_.size() < 1000)
+        return;
+
+    for(auto cell:covered_cells_)
+    {
+        double x[] = {cell->get_center()[0],cell->get_center()[1]};
+        cell->set_estimated_value(gaussian_field::instance()->f(x));
+        cell->set_variance(gaussian_field::instance()->var(x));
+    }
+
+    for(auto cell:covered_cells_)
     {        
         if(cell->is_target() && !cell->has_label())
         {
@@ -114,6 +129,8 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
     graph::get_components(graph_, components_);
 
     components_mutex_.unlock();
+
+    covered_cells_.clear();
 
     if(active_survey_param::policy == "greedy")
         greedy();
