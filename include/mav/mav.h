@@ -25,7 +25,7 @@ public:
     void set_velocity(const Vector3f &velocity){velocity_=velocity;}
     void change_velocity(const Vector3f &d_vel){velocity_+=d_vel;}
 
-    void set_goal(const Vector3f &goal){goal_=goal;}
+    void set_goal(const Vector3f &goal);
     Vector3f get_goal() const {return goal_;}
 
     void sense();
@@ -47,6 +47,8 @@ private:
     Vector3f goal_;
     mav_controller mav_controller_;
     behaviour_controller::ptr behaviour_controller_;
+
+    std::vector<Vector3f> positions_;
 
     bool stop_;
     const double goal_reached_threshold_;

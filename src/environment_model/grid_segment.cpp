@@ -53,7 +53,7 @@ void grid_segment::grow(std::function<grid_segment::ptr(grid_cell_base::label)> 
             {
                 if(nc->has_label())
                 {
-                    if(nc->get_label() != label)
+                    if(nc->get_label() != label && !nc->is_ignored())
                     {
                         add_edge(std::static_pointer_cast<graph_node>(segments_accessor(label)),
                                  std::static_pointer_cast<graph_node>(segments_accessor(nc->get_label())));
@@ -583,20 +583,27 @@ bool grid_segment::plan_coverage_path(const double &inter_lap_distance, const do
     return true;
 }
 
-double grid_segment::get_coverage_path_cost(const Vector3f &from, const Vector3f &end) const
+double grid_segment::get_coverage_path_cost(const Vector3f &from) const
 {
-    return get_coverage_path_switching_cost(from, end) + coverage_path_cost_;
+    return get_coverage_path_switching_cost(from) + coverage_path_cost_;
 }
 
-double grid_segment::get_coverage_path_switching_cost(const Vector3f &from, const Vector3f &end) const
+double grid_segment::get_coverage_path_switching_cost(const Vector3f &from) const
 {
-    double switching_cost_a = utility::distance(from, coverage_path_.front()) +
-            utility::distance(end, coverage_path_.back())+ 2.0*active_survey_param::turning_time;
-
-    double switching_cost_b = utility::distance(end, coverage_path_.front()) +
+    double switching_cost = utility::distance(from, coverage_path_.front()) +
             utility::distance(from, coverage_path_.back())+ 2.0*active_survey_param::turning_time;
+    return switching_cost;
+}
 
-    return std::min(switching_cost_a, switching_cost_b);
+double grid_segment::get_reaching_cost(const Vector3f &from) const
+{
+    double reaching_cost_a = utility::distance(from, coverage_path_.front())
+            + active_survey_param::turning_time;
+
+    double reaching_cost_b = utility::distance(from, coverage_path_.back())
+            + active_survey_param::turning_time;
+
+    return std::min(reaching_cost_a, reaching_cost_b);
 }
 
 double grid_segment::get_segment_value() const
@@ -613,19 +620,27 @@ void grid_segment::get_coverage_path(std::vector<Vector3f> &coverage_path) const
         coverage_path.push_back(*it);
 }
 
+void grid_segment::set_ignored()
+{
+    for(auto it = begin(); it != end();++it)
+        (*it)->set_ignored(true);
+}
+
 void grid_segment::draw()
 {
     glLineWidth(5);
     utility::gl_color(utility::get_altitude_color(get_label()));
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBegin(GL_POLYGON);
+    if(true || !get_ignored())
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glBegin(GL_POLYGON);
 
-    for(auto it=begin_approx_poly(); it!= end_approx_poly(); it++)
-        utility::gl_vertex3f(*it, 0.3);
+        for(auto it=begin_convexhull(); it!= end_convexhull(); it++)
+            utility::gl_vertex3f(*it, 0.3);
 
-    glEnd();
-
+        glEnd();
+    }
     glColor3f(0.5,0.1,0.6);
     glPointSize(3);
     glBegin(GL_POINTS);
@@ -634,16 +649,16 @@ void grid_segment::draw()
     glEnd();
 
 
-    glColor3f(0,1,0);
-    glLineWidth(2);
-    glBegin(GL_LINES);
-    for(size_t i=0; i+1<coverage_path_.size();i++)
-    {
-        utility::gl_vertex3f(coverage_path_[i]);
-        utility::gl_vertex3f(coverage_path_[i+1]);
-        glColor3f(1,0,0);
-    }
-    glEnd();
+//    glColor3f(0,1,0);
+//    glLineWidth(2);
+//    glBegin(GL_LINES);
+//    for(size_t i=0; i+1<coverage_path_.size();i++)
+//    {
+//        utility::gl_vertex3f(coverage_path_[i]);
+//        utility::gl_vertex3f(coverage_path_[i+1]);
+//        //glColor3f(1,0,0);
+//    }
+//    glEnd();
 }
 
 }

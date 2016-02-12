@@ -25,9 +25,13 @@ public:
     waypoint_const_iterator end() const {return waypoints_.end();}
     bool empty() const {return waypoints_.empty();}
 
+    waypoint::ptr pop_last_waypoint();
     waypoint::ptr pop_next_waypoint();
     void push_front(waypoint::ptr waypoint){waypoints_.insert(waypoints_.begin(),waypoint);}
     void push_back(waypoint::ptr waypoint){waypoints_.push_back(waypoint);}
+
+    double get_overall_cost(waypoint::ptr from=nullptr);
+    double cost(const Vector3f &cur_pos, const plan &next_plan);
 
 private:
     std::vector<waypoint::ptr> waypoints_;

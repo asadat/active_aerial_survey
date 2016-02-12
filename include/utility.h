@@ -12,10 +12,10 @@ namespace asn
 
 typedef Vector4f rect;
 
-const double epsilon = 0.01;
-const double epsilon_squared = 0.0001;
-const int rand_precision = 1000000;
-const double rand_precision_inv = 0.000001;
+const double epsilon = 1e-2;
+const double epsilon_squared = 1e-4;
+const int rand_precision = 1e6;
+const double rand_precision_inv = 1e-6;
 
 
 class utility
@@ -158,7 +158,7 @@ static void draw_quad(const rect &r)
 static Vector3f get_altitude_color(const double& h)
 {
     Vector3f c;
-    double small_dh=0.01;
+    double small_dh=1e-2;
     static std::vector<Vector3f> colors;
     static std::vector<Vector2f> h2c;
 

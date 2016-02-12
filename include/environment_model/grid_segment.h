@@ -63,10 +63,14 @@ public:
 
     void draw();
 
-    double get_coverage_path_cost(const Vector3f &from, const Vector3f &end) const;
-    double get_coverage_path_switching_cost(const Vector3f &from, const Vector3f &end) const;
+    double get_coverage_path_cost(const Vector3f &from) const;
+    double get_coverage_path_switching_cost(const Vector3f &from) const;
+    double get_reaching_cost(const Vector3f &from) const;
     double get_segment_value() const;
     void get_coverage_path(std::vector<Vector3f> &coverage_path) const;
+
+    void set_ignored();
+    bool get_ignored() const {return (*begin())->is_ignored();}
 
 private:
     grid_segment()=delete;

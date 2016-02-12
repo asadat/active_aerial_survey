@@ -75,44 +75,80 @@ void behaviour_controller::update_available_flight_time(bool turning_point)
 
 void behaviour_controller::update(const double &dt)
 {
-    if(!mav_.at_goal())
+    waypoint::action requested_action =  behaviour_planner_->get_controller_action();
+    behaviour_planner_->reset_controller_action();
+
+    bool switch_to_next_waypoint = false;
+
+    if(requested_action != waypoint::action::INTERRUPT_WAYPOINT)
     {
-        mav_.update_state(dt);
-        start_sensing(false);
+        if(!mav_.at_goal())
+        {
+            mav_.update_state(dt);
+            start_sensing(false);
+        }
+        else
+        {
+          switch_to_next_waypoint = true;
+
+          if(waypoint_)
+          {
+              auto wp_action = waypoint_->get_action();
+              switch(wp_action)
+              {
+                case waypoint::action::START_SENSING:
+                  sensing_ = true;
+                  break;
+                case waypoint::action::STOP_SENSING:
+                  //start_sensing(true);
+                  sensing_ = false;
+                  break;
+                case waypoint::action::NONE:
+                default:
+                  break;
+              }
+              waypoint_->on_reached_waypoint(waypoint_);
+          }
+      }
     }
     else
     {
-      if(waypoint_)
-      {
-          update_available_flight_time(true);
-          auto wp_action = waypoint_->get_action();
-          switch(wp_action)
-          {
-            case waypoint::action::START_SENSING:
-              sensing_ = true;
-              break;
-            case waypoint::action::STOP_SENSING:
-              start_sensing(true);
-              sensing_ = false;
-              break;
-            case waypoint::action::NONE:
-            default:
-              break;
-          }
-
-          waypoint_->on_reached_waypoint(waypoint_);
-      }
-
-      waypoint_ = behaviour_planner_->get_next_waypoint();
-      if(waypoint_)
-      {
-          mav_.set_goal(waypoint_->get_position());
-      }
-      else
-      {
-          ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer!");
-      }
+        switch_to_next_waypoint = true;
     }
+
+
+    if(switch_to_next_waypoint)
+    {
+        if(requested_action == waypoint::action::STOP_SENSING)
+            last_sensing_pos_ = mav_.get_position();
+
+        update_available_flight_time(true);
+
+        waypoint_ = behaviour_planner_->get_next_waypoint();
+        if(waypoint_)
+        {
+            auto wp_action = waypoint_->get_on_set_action();
+            switch(wp_action)
+            {
+              case waypoint::action::START_SENSING:
+                sensing_ = true;
+                break;
+              case waypoint::action::STOP_SENSING:
+                sensing_ = false;
+                break;
+              case waypoint::action::NONE:
+              default:
+                break;
+            }
+
+            mav_.set_goal(waypoint_->get_position());
+        }
+        else
+        {
+          ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer!");
+        }
+    }
+
 }
 
 void behaviour_controller::draw()

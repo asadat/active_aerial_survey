@@ -7,7 +7,8 @@ namespace asn
 
 behaviour_planner::behaviour_planner(mav &m):
     mav_(m),
-    last_waypoint_(nullptr)
+    last_waypoint_(nullptr),
+    controller_action_(waypoint::action::NONE)
 {
     graph_ = std::make_shared<graph>();
     generate_coarse_survey();
@@ -230,10 +231,160 @@ void behaviour_planner::draw()
 }
 
 void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segments, const Vector3f &pos,
-                                          const double &available_flight_time, const waypoint::ptr &cur_waypoint, plan &cur_plan)
+                                          const double &available_flight_time, const waypoint::ptr &cur_waypoint,
+                                          plan &cur_plan)
+{
+    if(segments.empty())
+        return;
+
+    bool flag = true;
+
+    cur_plan.push_front(cur_waypoint);
+    waypoint::ptr curpos_waypoint = std::make_shared<waypoint>(pos);
+    curpos_waypoint->set_action(waypoint::action::START_SENSING);
+    cur_plan.push_front(curpos_waypoint);
+
+    plan coverage_plan;
+
+    while(flag)
+    {
+        double max_fac = 0;
+        grid_segment::ptr max_fac_seg = nullptr;
+        for(auto &seg: segments)
+        {
+            if(seg->get_ignored())
+                continue;
+
+            double reaching_cost = seg->get_reaching_cost(pos);
+            double value = seg->get_segment_value();
+
+            double fac =value/reaching_cost;
+            if(max_fac < fac)
+            {
+                max_fac = fac;
+                max_fac_seg = seg;
+            }
+        }
+
+
+        if(max_fac_seg)
+        {
+            flag = construct_coverage_plan(max_fac_seg, pos, available_flight_time, cur_waypoint, cur_plan, coverage_plan);
+            max_fac_seg->set_ignored();
+        }
+        else
+            flag = false;
+    }
+
+    if(coverage_plan.empty())
+    {
+        cur_plan.pop_next_waypoint();
+        cur_plan.pop_next_waypoint();
+    }
+    else
+    {
+            while(!coverage_plan.empty())
+            {
+                coverage_plan.back()->set_waypoint_call_back([](waypoint::ptr wp_ptr)
+                {
+                    ROS_INFO("WP CB: %f %f %f Coverage WP",
+                            wp_ptr->get_position()[0],
+                            wp_ptr->get_position()[1],
+                            wp_ptr->get_position()[2]);
+                });
+
+                cur_plan.push_front(coverage_plan.back());
+                coverage_plan.pop_last_waypoint();
+            }
+
+            controller_action_ = waypoint::action::INTERRUPT_WAYPOINT;
+    }
+}
+
+bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const Vector3f &pos,
+                                                const double &available_flight_time, const waypoint::ptr &cur_waypoint,
+                                                plan &cur_plan, plan &coverage_plan)
 {
 
+    std::vector<Vector3f> seg_coverage_path;
+    segment->get_coverage_path(seg_coverage_path);
 
+    if(seg_coverage_path.size() < 2)
+        return true;
+
+    while(coverage_plan.cost(pos, cur_plan) < available_flight_time)
+    {
+        if(seg_coverage_path.empty())
+            break;
+
+        waypoint::ptr first_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
+        seg_coverage_path.erase(seg_coverage_path.begin());
+        first_waypoint->set_on_set_action(waypoint::action::STOP_SENSING);
+        coverage_plan.push_back(first_waypoint);
+    }
+
+    return seg_coverage_path.empty();
+
+//    double remaining_survey_cost = cur_plan.get_overall_cost(cur_waypoint);
+//    double reaching_cost = segment->get_reaching_cost(pos);
+//    double extra_coverage_time = available_flight_time - remaining_survey_cost -
+//            3*active_survey_param::turning_time - utility::distance(pos, cur_waypoint->get_position())
+//            - reaching_cost;
+
+//    if(extra_overage_time > 0.0)
+//    {
+//        plan coverage_plan;
+
+//        // current survey waypoint
+//        //coverage_plan.push_back(cur_waypoint);
+
+//        // current position for comming back
+//        waypoint::ptr curpos_waypoint = std::make_shared<waypoint>(pos);
+//        curpos_waypoint->set_action(waypoint::action::START_SENSING);
+//        //coverage_plan.push_front(curpos_waypoint);
+
+//        if(utility::distance_squared(pos, seg_coverage_path.back()) >
+//                utility::distance_squared(pos, seg_coverage_path.front()))
+//            std::reverse(seg_coverage_path.begin(), seg_coverage_path.end());
+
+//        waypoint::ptr first_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
+//        seg_coverage_path.erase(seg_coverage_path.begin());
+//        coverage_plan.push_back(first_waypoint);
+
+//        bool flag = true;
+//        while(flag)
+//        {
+//            double lap_cost = utility::distance(coverage_plan.back()->get_position(), seg_coverage_path.front()) +
+//                    active_survey_param::turning_time;
+
+//            if(extra_coverage_time > lap_cost)
+//            {
+//                extra_coverage_time -= lap_cost;
+//                waypoint::ptr coverage_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
+//                seg_coverage_path.erase(seg_coverage_path.begin());
+//                coverage_plan.push_back(coverage_waypoint);
+//            }
+//            else
+//            {
+//                flag = false;
+//            }
+
+//            if(seg_coverage_path.empty())
+//                flag = false;
+//        }
+
+//        coverage_plan.push_back(curpos_waypoint);
+//        coverage_plan.push_back(cur_waypoint);
+
+//        if(seg_coverage_path.empty())
+//            return true;
+//        else
+//            return false;
+//    }
+//    else
+//    {
+//        return false;
+//    }
 }
 
 void behaviour_planner::greedy()
@@ -248,11 +399,16 @@ void behaviour_planner::greedy()
         auto seg = sp.second;
         seg->plan_coverage_path(12,6);
 
-        if(seg->is_valid())
+        if(seg->is_valid() && !seg->get_ignored())
             segments.push_back(seg);
     }
 
+    ROS_INFO(" before planning .....");
     plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, plan_);
+    ROS_INFO(" after planning ......");
+
+    for(auto seg:segments)
+        seg->set_ignored();
 }
 
 void behaviour_planner::semi_greedy()

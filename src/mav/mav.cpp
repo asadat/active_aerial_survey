@@ -19,6 +19,12 @@ mav::mav(environment_model &em, const Vector3f &position):
 
 mav::~mav(){}
 
+void mav::set_goal(const Vector3f &goal)
+{
+    positions_.push_back(get_position());
+    goal_= goal;
+}
+
 void mav::sense()
 {
     sensor_.sense(position_, [](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p){});
@@ -75,6 +81,19 @@ void mav::draw()
     utility::gl_vertex3f(position_-l*Vector3f(0,1,0));
     utility::gl_vertex3f(position_+l*Vector3f(0,1,0));
     glEnd();
+
+
+
+    glLineWidth(1);
+    glColor3f(0.6, 0.6, 1);
+    glBegin(GL_LINES);
+    for(size_t i=0; i+1<positions_.size(); i++)
+    {
+        utility::gl_vertex3f(positions_[i]);
+        utility::gl_vertex3f(positions_[i+1]);
+    }
+    glEnd();
+
 }
 
 }

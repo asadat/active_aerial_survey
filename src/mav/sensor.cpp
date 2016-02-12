@@ -18,13 +18,14 @@ void sensor::sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr
 {
     sensing_locations_.push_back(p);
 
-    std::thread sensing_thread([this, p, callback]()
-    {
-        //auto t0 = ros::Time::now();
-        this->perform_sense(p, callback);
-        //ROS_INFO_THROTTLE(1,"sensing time: %f", (ros::Time::now()-t0).toSec());
-    });
-    sensing_thread.detach();
+//    std::thread sensing_thread([this, p, callback]()
+//    {
+//        //auto t0 = ros::Time::now();
+//        this->perform_sense(p, callback);
+//        //ROS_INFO_THROTTLE(1,"sensing time: %f", (ros::Time::now()-t0).toSec());
+//    });
+//    sensing_thread.detach();
+    perform_sense(p, callback);
 }
 
 grid_cell::ptr sensor::sense_cell(const Vector2f &p)

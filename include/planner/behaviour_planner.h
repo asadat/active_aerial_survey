@@ -30,6 +30,9 @@ public:
 
     void set_get_available_time(std::function<double(void)> f){get_available_time_ = f;}
 
+    waypoint::action get_controller_action() const {return controller_action_;}
+    void reset_controller_action() {controller_action_ = waypoint::action::NONE;}
+
 private:
     void greedy();
     void semi_greedy();
@@ -47,12 +50,17 @@ private:
     void plan_sensing_tour(std::vector<grid_segment::ptr> &segments, const Vector3f &pos,
                            const double &available_flight_time, const waypoint::ptr &cur_waypoint ,plan & cur_plan);
 
+    bool construct_coverage_plan(grid_segment::ptr segment, const Vector3f &pos,
+                                 const double &available_flight_time, const waypoint::ptr &cur_waypoint ,
+                                 plan & cur_plan, plan& coverage_plan);
     mav &mav_;
     plan plan_;
 
     std::map<grid_cell_base::label, grid_segment::ptr> segments_;
     waypoint::ptr last_waypoint_;
     Vector3f last_sensing_position_;
+
+    waypoint::action controller_action_;
 
     std::set<grid_cell::ptr> covered_cells_;
     std::mutex components_mutex_;
