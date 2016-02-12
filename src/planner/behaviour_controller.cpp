@@ -30,9 +30,9 @@ void behaviour_controller::start_sensing(bool override_min_travel_dist)
             update_available_flight_time(false);
             last_sensing_pos_ = mav_.get_position();
             mav_.sensor_.sense(mav_.get_position(),
-                               [this](std::set<grid_cell::ptr>& covered_cells)
+                               [this](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p)
             {
-                this->behaviour_planner_->sensing_callback(covered_cells);
+                this->behaviour_planner_->sensing_callback(covered_cells, p);
             });
         }
     }

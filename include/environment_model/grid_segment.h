@@ -30,6 +30,7 @@ public:
 
     void find_approximate_polygon();
     void find_convexhull();
+    bool plan_coverage_path(const double &inter_lap_distance, const double &altitude);
 
     void get_approximate_polygon(polygon &approx_poly) const;
     void get_convexhull(polygon &convexhull) const;
@@ -54,16 +55,34 @@ public:
 
     void clear();
 
+    size_t get_cell_count() const {return cells_.size();}
+    size_t get_convexhull_vertices_count() const {return  convexhull_.size();}
+    size_t get_approx_poly_vertices_count() const {return  approximate_polygon_.size();}
+
+    bool is_valid() const {return get_convexhull_vertices_count() > 3;}
+
+    void draw();
+
+    double get_coverage_path_cost(const Vector3f &from, const Vector3f &end) const;
+    double get_coverage_path_switching_cost(const Vector3f &from, const Vector3f &end) const;
+    double get_segment_value() const;
+    void get_coverage_path(std::vector<Vector3f> &coverage_path) const;
+
 private:
     grid_segment()=delete;
     void remove_skinny_part(grid_cell::ptr cell);
     int get_approximate_neighbours_count(grid_cell::ptr cell);
     void set_label(grid_cell_base::label l);
+    bool find_base_edge(size_t &first_index, size_t &second_index, double &convexhull_height) const;
 
     grid &grid_;
     std::set<grid_cell::ptr> cells_;
     std::vector<grid_cell::ptr> boundary_cells_;
     std::vector<grid_cell::ptr> approximate_poly_cells_;
+
+    double coverage_path_cost_;
+    std::vector<Vector3f> coverage_path_;
+    bool is_line_;
 
     polygon approximate_polygon_;
     polygon convexhull_;

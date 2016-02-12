@@ -63,6 +63,8 @@ public:
     static double random_seed;
     static double gp_sigma;
     static double exploitation_rate;
+    static double coarse_coverage_height;
+    static double sensing_height;
 
     class non_ros
     {

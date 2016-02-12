@@ -17,16 +17,19 @@ class grid
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    grid(const Vector2f &center, const size2f &cell_size, const size2i &size);
+    typedef std::vector<grid_cell::ptr>::iterator cell_iterator;
+    typedef std::vector<grid_cell::ptr>::const_iterator const_cell_iterator;
 
+public:
+    grid(const Vector2f &center, const size2f &cell_size, const size2i &size);
     ~grid();
 
     inline size2f get_cell_size() const {return cell_size_;}
     inline Vector2f get_center() const {return center_;}
     inline size2i get_grid_size() const {return size_;}
 
-    inline std::vector<grid_cell::ptr>::iterator begin(){return cells_.begin();}
-    inline std::vector<grid_cell::ptr>::iterator end(){return cells_.end();}
+    inline cell_iterator begin(){return cells_.begin();}
+    inline cell_iterator end(){return cells_.end();}
 
     grid_cell::ptr get_cell(const grid_index &idx) const;
     grid_cell::ptr get_neighbour_cell(const grid_cell::ptr &ref, const grid_index &rel_idx) const;

@@ -10,6 +10,8 @@ grid::grid(const Vector2f &center, const size2f &cell_size, const size2i &size):
     cell_size_(cell_size),
     size_(size)
 {
+    cells_.reserve(size_[0]*size_[1]);
+
     neighbours_idx_4_ = {{0,-1},{1,0},{0,1},{-1,0}};
     neighbours_idx_8_ = {{-1,-1},{0,-1},{1,-1},{1,0},{1,1},{0,1},{-1,1},{-1,0}};
 

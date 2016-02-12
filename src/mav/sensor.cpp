@@ -14,7 +14,7 @@ sensor::~sensor()
 {
 }
 
-void sensor::sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr>&)> callback)
+void sensor::sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr>&, const Vector3f&)> callback)
 {
     sensing_locations_.push_back(p);
 
@@ -43,7 +43,7 @@ grid_cell::ptr sensor::sense_cell(const Vector2f &p)
     return cell;
 }
 
-void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::ptr>&)> callback)
+void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::ptr>&, const Vector3f&)> callback)
 {
     environment_model_.grid_mutex_.lock();
 
@@ -93,7 +93,7 @@ void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::pt
     }
 
 
-    callback(update_cells);
+    callback(update_cells, p);
 
     environment_model_.grid_mutex_.unlock();
 }

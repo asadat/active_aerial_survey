@@ -108,6 +108,7 @@ public:
                 center_[0]+0.5*size_[0], center_[1]+0.5*size_[1]);}
 
     bool is_target() const;
+    double get_area() const {return size_[0]*size_[1];}
 
 private:
     grid_cell();

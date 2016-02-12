@@ -27,6 +27,7 @@ void grid_segment::clear()
     approximate_poly_cells_.clear();
     approximate_polygon_.clear();
     convexhull_.clear();
+    coverage_path_.clear();
 }
 
 void grid_segment::grow(std::function<grid_segment::ptr(grid_cell_base::label)> segments_accessor)
@@ -307,7 +308,7 @@ void grid_segment::find_convexhull()
     convexhull_.push_back(*second);
 
     //check if the cells form a line a line
-    bool is_line = true;
+    is_line_ = true;
     const Vector2f &p_0 = approximate_polygon_.front();
     const Vector2f &p_1 = approximate_polygon_.back();
 
@@ -317,12 +318,12 @@ void grid_segment::find_convexhull()
 
         if(fabs((p_0[1]-p_1[1])*(p_0[0]-p_n[0]) - (p_0[1]-p_n[1])*(p_0[0]-p_1[0])) > 0.01)
         {
-            is_line = false;
+            is_line_ = false;
             break;
         }
     }
 
-    if(is_line)
+    if(is_line_)
     {
         convexhull_.clear();
         std::copy(approximate_polygon_.begin(), approximate_polygon_.end(), std::back_inserter(convexhull_));
@@ -388,6 +389,261 @@ void grid_segment::find_convexhull()
     }
 
     std::reverse(convexhull_.begin(), convexhull_.end());
+}
+
+bool grid_segment::find_base_edge(size_t &first_index, size_t &second_index, double &convexhull_height) const
+{
+    if(!is_valid())
+        return false;
+
+    if(is_line_)
+    {
+        double max_dist = 0;
+        for(size_t i=0; i<convexhull_.size(); ++i)
+            for(size_t j=0; j<convexhull_.size(); ++j)
+            {
+                double dist = utility::distance_squared(convexhull_[i], convexhull_[j]);
+                if(dist > max_dist)
+                {
+                    max_dist = dist;
+                    first_index = i;
+                    second_index = j;
+                }
+            }
+
+        return true;
+    }
+
+    size_t size = convexhull_.size();
+    double min_height = 999999;
+    size_t min_height_index = 0;
+
+    for(size_t i=0; i < size; i++)
+    {
+        double max_height = 0;
+
+        for(size_t j=0; j < size; j++)
+        {
+            if(j==i || (i+1)%size ==j)
+                continue;
+
+            double h = utility::point_to_line_distance(convexhull_[i],
+                                                       convexhull_[(i+1)%size],
+                                                       convexhull_[j]);
+
+            max_height = (max_height < h) ? h : max_height;
+        }
+
+        if(min_height > max_height)
+        {
+            min_height = max_height;
+            convexhull_height = min_height;
+            min_height_index = i;
+        }
+    }
+
+    double sd = utility::point_to_line_signed_distance(convexhull_[min_height_index],
+                                                convexhull_[(min_height_index+1)%size],
+                                                convexhull_[(min_height_index+2)%size]);
+    if(sd > 0)
+    {
+        first_index = min_height_index;
+        second_index = (min_height_index+1)%size;
+    }
+    else
+    {
+        second_index = min_height_index;
+        first_index = (min_height_index+1)%size;
+    }
+
+    return true;
+}
+
+bool grid_segment::plan_coverage_path(const double &inter_lap_distance, const double &altitude)
+{
+    coverage_path_.clear();
+    coverage_path_cost_=0;
+
+    vector<Vector2f> coverage_path;
+
+    size_t base[2];
+    double convexhull_height=0;
+    if(!find_base_edge(base[0], base[1], convexhull_height))
+        return false;
+
+    if(is_line_)
+    {
+        coverage_path_.push_back(utility::augment(convexhull_[base[0]], altitude));
+        coverage_path_.push_back(utility::augment(convexhull_[base[1]], altitude));
+        coverage_path_cost_ = utility::distance(coverage_path_.front(), coverage_path_.back());
+        return true;
+    }
+
+    Vector2f base_dir  = convexhull_[base[1]]-convexhull_[base[0]];
+    Vector2f base_dir_norm = base_dir.normalized();
+
+    //clockwise orthogonal vector
+    Vector2f sweep_dir(base_dir_norm[1], -base_dir_norm[0]);
+
+    Vector2f sn0 = convexhull_[base[0]];
+    Vector2f en0 = convexhull_[base[1]];
+    double offset0 = inter_lap_distance*0.5;
+
+    sn0 += offset0 * sweep_dir;
+    en0 += offset0 * sweep_dir;
+
+    // first lm track
+    coverage_path.push_back(sn0);
+    coverage_path.push_back(en0);
+
+    double n =-1;
+    while(convexhull_height / inter_lap_distance > n)
+    {
+        n+=1.0;
+
+        Vector2f sn = sn0;
+        Vector2f en = en0;
+        sn += n * inter_lap_distance * sweep_dir;
+        en += n * inter_lap_distance * sweep_dir;
+
+        sn -=  2 * active_survey_param::area_width * base_dir_norm;
+        en +=  2 * active_survey_param::area_width * base_dir_norm;
+
+        vector<Vector2f> intersections;
+
+        for(size_t i=0; i< convexhull_.size(); i++)
+        {
+            Vector2f ise(0,0);
+            if(utility::get_line_segment_intersection(sn, en, convexhull_[i], convexhull_[(i+1)%(convexhull_.size())], ise))
+            {
+                intersections.push_back(ise);
+            }
+        }
+
+        if(intersections.size() > 1)
+        {
+            if(intersections.size() > 2)
+            {
+                for(size_t i=0; i<intersections.size(); i++)
+                {
+                    for(size_t j=i+1; j<intersections.size(); j++)
+                    {
+                        if(utility::distance_squared(intersections[i],intersections[j]) < 0.1)
+                        {
+                            intersections.erase(intersections.begin()+j);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(intersections.size()>=2)
+            {
+                if(utility::distance_squared(intersections[0],coverage_path[coverage_path.size()-2]) <
+                        utility::distance_squared(intersections[1],coverage_path[coverage_path.size()-2]))
+                {
+                    coverage_path.push_back(intersections[1]);
+                    coverage_path.push_back(intersections[0]);
+                }
+                else
+                {
+                    coverage_path.push_back(intersections[0]);
+                    coverage_path.push_back(intersections[1]);
+                }
+            }
+        }
+        else
+        {
+            // no intersection !!!!!!
+        }
+      }
+
+    if(coverage_path.size() > 2)
+    {
+        coverage_path.erase(coverage_path.begin());
+        coverage_path.erase(coverage_path.begin());
+    }
+    else
+    {
+        coverage_path[0] -= ((offset0)-convexhull_height/2) * sweep_dir;
+        coverage_path[1] -= ((offset0)-convexhull_height/2) * sweep_dir;
+    }
+
+
+
+    for(auto it=coverage_path.begin(), prev=it; it!=coverage_path.end(); ++it)
+    {
+        coverage_path_cost_ += utility::distance(*it, *prev);
+        prev = it;
+        coverage_path_.push_back(utility::augment(*it, altitude));
+    }
+
+    coverage_path_cost_ += (coverage_path_.size()-2)* active_survey_param::turning_time;
+
+    return true;
+}
+
+double grid_segment::get_coverage_path_cost(const Vector3f &from, const Vector3f &end) const
+{
+    return get_coverage_path_switching_cost(from, end) + coverage_path_cost_;
+}
+
+double grid_segment::get_coverage_path_switching_cost(const Vector3f &from, const Vector3f &end) const
+{
+    double switching_cost_a = utility::distance(from, coverage_path_.front()) +
+            utility::distance(end, coverage_path_.back())+ 2.0*active_survey_param::turning_time;
+
+    double switching_cost_b = utility::distance(end, coverage_path_.front()) +
+            utility::distance(from, coverage_path_.back())+ 2.0*active_survey_param::turning_time;
+
+    return std::min(switching_cost_a, switching_cost_b);
+}
+
+double grid_segment::get_segment_value() const
+{
+    if(!cells_.empty())
+        return cells_.size() * (*begin())->get_area();
+    else
+        return 0.0;
+}
+
+void grid_segment::get_coverage_path(std::vector<Vector3f> &coverage_path) const
+{
+    for(auto it=coverage_path_.begin(); it !=coverage_path_.end(); ++it)
+        coverage_path.push_back(*it);
+}
+
+void grid_segment::draw()
+{
+    glLineWidth(5);
+    utility::gl_color(utility::get_altitude_color(get_label()));
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBegin(GL_POLYGON);
+
+    for(auto it=begin_approx_poly(); it!= end_approx_poly(); it++)
+        utility::gl_vertex3f(*it, 0.3);
+
+    glEnd();
+
+    glColor3f(0.5,0.1,0.6);
+    glPointSize(3);
+    glBegin(GL_POINTS);
+    for(auto cell:cells_)
+        utility::gl_vertex3f(cell->get_center(), 0.4);
+    glEnd();
+
+
+    glColor3f(0,1,0);
+    glLineWidth(2);
+    glBegin(GL_LINES);
+    for(size_t i=0; i+1<coverage_path_.size();i++)
+    {
+        utility::gl_vertex3f(coverage_path_[i]);
+        utility::gl_vertex3f(coverage_path_[i+1]);
+        glColor3f(1,0,0);
+    }
+    glEnd();
 }
 
 }

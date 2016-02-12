@@ -21,7 +21,7 @@ mav::~mav(){}
 
 void mav::sense()
 {
-    sensor_.sense(position_, [](std::set<grid_cell::ptr>& covered_cells){});
+    sensor_.sense(position_, [](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p){});
 }
 
 void mav::update(const double &dt)

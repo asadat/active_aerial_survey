@@ -23,24 +23,66 @@ class utility
 
 public:
 
+static Vector3f augment(const Vector2f &v, const float &val)
+{
+    return Vector3f(v[0], v[1], val);
+}
+
 static double angle(const Vector2f &a, const Vector2f &b, const Vector2f &c)
 {
     return acos((a-b).dot(c-b) / (sqrt((a-b).dot(a-b))*sqrt((c-b).dot(c-b))) );
 }
 
-static double distance_squared(const Vector3f &a, const Vector3f &b)
+//static double distance_squared(const Vector2f &a, const Vector2f &b)
+//{
+//    return (a-b).squaredNorm();
+//}
+
+template<typename V>
+static double distance_squared(const V &a, const V &b)
 {
     return (a-b).squaredNorm();
 }
 
-static double distance(const Vector3f &a, const Vector3f &b)
+template<typename V>
+static double distance(const V &a, const V &b)
 {
     return (a-b).norm();
 }
 
-static double point_to_line_distance(Vector2f p1, Vector2f p2, Vector2f x)
+static bool get_line_segment_intersection(const Vector2f &p0, const Vector2f &p1, const Vector2f &p2,
+                                               const Vector2f &p3, Vector2f &intersection_p)
 {
-    double d = fabs((p2[0]-p1[0])*(p1[1]-x[1]) - (p1[0]-x[0])*(p2[1]-p1[1]))/sqrt((p2[0]-p1[0])*(p2[0]-p1[0])+(p2[1]-p1[1])*(p2[1]-p1[1]));
+    float p0_x = p0[0], p0_y = p0[1], p1_x = p1[0], p1_y=p1[1], p2_x = p2[0], p2_y=p2[1], p3_x = p3[0], p3_y=p3[1];
+
+    float s1_x, s1_y, s2_x, s2_y;
+    s1_x = p1_x - p0_x;     s1_y = p1_y - p0_y;
+    s2_x = p3_x - p2_x;     s2_y = p3_y - p2_y;
+
+    float s, t;
+    s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+    t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+    {
+        intersection_p[0] = p0_x + (t * s1_x);
+        intersection_p[1] = p0_y + (t * s1_y);
+        return true;
+    }
+
+    return false;
+}
+
+static double point_to_line_distance(const Vector2f &p1, const Vector2f &p2, const Vector2f &x)
+{
+    //double d = fabs((p2[0]-p1[0])*(p1[1]-x[1]) - (p1[0]-x[0])*(p2[1]-p1[1]))/sqrt((p2[0]-p1[0])*(p2[0]-p1[0])+(p2[1]-p1[1])*(p2[1]-p1[1]));
+    double d = fabs(point_to_line_signed_distance(p1,p2,x));
+    return d;
+}
+
+static double point_to_line_signed_distance(const Vector2f &p1, const Vector2f &p2, const Vector2f &x)
+{
+    double d = ((p2[0]-p1[0])*(p1[1]-x[1]) - (p1[0]-x[0])*(p2[1]-p1[1]))/sqrt((p2[0]-p1[0])*(p2[0]-p1[0])+(p2[1]-p1[1])*(p2[1]-p1[1]));
     return d;
 }
 
@@ -122,7 +164,7 @@ static Vector3f get_altitude_color(const double& h)
 
     if(colors.empty())
     {
-        colors.push_back(Vector3f(0,0,0));
+        //colors.push_back(Vector3f(0,0,0));
         colors.push_back(Vector3f(0.5,0.5,0.5));
         colors.push_back(Vector3f(0,1,1));
         colors.push_back(Vector3f(1,0,1));

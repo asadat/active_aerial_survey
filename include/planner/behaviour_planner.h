@@ -26,9 +26,9 @@ public:
     waypoint::ptr get_next_waypoint();
 
     void draw();
-    void sensing_callback(std::set<grid_cell::ptr>& covered_cells);
+    void sensing_callback(std::set<grid_cell::ptr>& covered_cells, const Vector3f &sensing_position);
 
-    void set_get_available_time(std::function<double(void)> f){get_available_time = f;}
+    void set_get_available_time(std::function<double(void)> f){get_available_time_ = f;}
 
 private:
     void greedy();
@@ -38,17 +38,21 @@ private:
     void generate_coarse_survey();
     void generate_test_waypoints();
 
-    void update_segments();
-    void update_grid_gp();
+    template<typename cell_iterator>
+    void update_segments(const cell_iterator &begin_it, const cell_iterator &end_it);
 
-    void plan_sensing_tour(std::vector<graph::ptr> &components, const Vector3f &pos,
-                           const double &available_flight_time, plan & cur_plan);
+    template<typename cell_iterator>
+    void update_grid_gp(const cell_iterator &begin_it, const cell_iterator &end_it);
+
+    void plan_sensing_tour(std::vector<grid_segment::ptr> &segments, const Vector3f &pos,
+                           const double &available_flight_time, const waypoint::ptr &cur_waypoint ,plan & cur_plan);
 
     mav &mav_;
     plan plan_;
 
     std::map<grid_cell_base::label, grid_segment::ptr> segments_;
-    waypoint::ptr last_waypoint;
+    waypoint::ptr last_waypoint_;
+    Vector3f last_sensing_position_;
 
     std::set<grid_cell::ptr> covered_cells_;
     std::mutex components_mutex_;
@@ -57,7 +61,7 @@ private:
 
     graph::ptr  graph_;
 
-    std::function<double(void)> get_available_time;
+    std::function<double(void)> get_available_time_;
 };
 
 }

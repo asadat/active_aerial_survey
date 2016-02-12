@@ -7,7 +7,7 @@ namespace asn
 
 behaviour_planner::behaviour_planner(mav &m):
     mav_(m),
-    last_waypoint(nullptr)
+    last_waypoint_(nullptr)
 {
     graph_ = std::make_shared<graph>();
     generate_coarse_survey();
@@ -74,14 +74,15 @@ waypoint::ptr behaviour_planner::get_next_waypoint()
         return nullptr;
     else
     {
-        last_waypoint = plan_.pop_next_waypoint();
-        return last_waypoint;
+        last_waypoint_ = plan_.pop_next_waypoint();
+        return last_waypoint_;
     }
 }
 
-void behaviour_planner::update_grid_gp()
+template<typename cell_iterator>
+void behaviour_planner::update_grid_gp(const cell_iterator &begin_it, const cell_iterator &end_it)
 {
-    for(auto it =mav_.get_grid().begin(); it!=mav_.get_grid().end(); ++it)
+    for(auto it =begin_it; it!=end_it; ++it)
     {
         auto &cell = *it;
         double x[] = {cell->get_center()[0],cell->get_center()[1]};
@@ -90,8 +91,11 @@ void behaviour_planner::update_grid_gp()
     }
 }
 
-void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells)
+
+void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells, const Vector3f &sensing_position)
 {
+    last_sensing_position_ = sensing_position;
+
     for(auto cell:covered_cells)
         covered_cells_.insert(cell);
 
@@ -100,8 +104,8 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
     if(covered_cells_.size() > mav_.get_grid().cells_count()*active_survey_param::exploitation_rate)
     {
 
-        update_grid_gp();
-        update_segments();
+        //update_grid_gp();
+        //update_segments();
 
         if(active_survey_param::policy == "greedy")
             greedy();
@@ -112,10 +116,13 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
     }
 }
 
-void behaviour_planner::update_segments()
+
+template<typename cell_iterator>
+void behaviour_planner::update_segments(const cell_iterator &begin_it, const cell_iterator &end_it)
 {
-    for(auto cell:covered_cells_)
+    for(auto cell_it=begin_it; cell_it!=end_it; ++cell_it)
     {
+        auto cell = *cell_it;
         if(cell->is_target() && !cell->has_label())
         {
             grid_segment::ptr gs = std::make_shared<grid_segment>(mav_.get_grid(), cell, grid_cell_base::generate_label());
@@ -155,7 +162,7 @@ void behaviour_planner::update_segments()
         for(auto cit=components_.begin(); cit!=components_.end(); ++cit)
         {
             graph::ptr component = *cit;
-            ROS_INFO("merging component size: %ld", component->size());
+            //ROS_INFO("merging component size: %ld", component->size());
             auto s_it=component->begin();
             grid_segment::ptr first_segment = std::static_pointer_cast<grid_segment>(*s_it);
 
@@ -166,18 +173,20 @@ void behaviour_planner::update_segments()
                 grid_segment::ptr mergin_seg = std::static_pointer_cast<grid_segment>(*seg_it);
                 segments_.erase(mergin_seg->get_label());
 
-                ROS_WARN("mergin %u with %u", first_segment->get_label(), mergin_seg->get_label());
+                //ROS_WARN("mergin %u with %u", first_segment->get_label(), mergin_seg->get_label());
                 grid_segment::merge_with_segment(first_segment, mergin_seg, graph_);
                 component->remove_left_alone_node(*seg_it);
             }
 
-            ROS_INFO("finished merging component size: %ld", component->size());
+            //ROS_INFO("finished merging component size: %ld", component->size());
         }
     }
 
-    components_mutex_.unlock();
+//    ROS_INFO("#components: %ld #segments: %ld", components_.size(), segments_.size());
+//    for(auto s:segments_)
+//        ROS_ERROR("#cells %ld in segment %u", s.second->get_approx_poly_vertices_count(), s.second->get_label());
 
-    covered_cells_.clear();
+    components_mutex_.unlock();
 
 }
 
@@ -191,9 +200,9 @@ void behaviour_planner::draw()
 
         auto it=plan_.begin();
 
-        if(last_waypoint)
+        if(last_waypoint_)
         {
-            utility::gl_vertex3f(last_waypoint->get_position());
+            utility::gl_vertex3f(last_waypoint_->get_position());
         }
         else
         {
@@ -212,26 +221,38 @@ void behaviour_planner::draw()
 
     components_mutex_.lock();
 
-//    for(auto c:components_)
-//        c->draw();
     for(auto &gsp:segments_)
     {
-        grid_segment::ptr gs = gsp.second;
-        glLineWidth(5);
-        glColor3f(0.6,0.5,0);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBegin(GL_POLYGON);
-        //for(auto it=gs->begin_approx_poly(); it!= gs->end_approx_poly(); it++)
-        for(auto it=gs->begin_convexhull(); it!= gs->end_convexhull(); it++)
-            utility::gl_vertex3f(*it, 0.3);
-        glEnd();
+        gsp.second->draw();
     }
+
     components_mutex_.unlock();
+}
+
+void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segments, const Vector3f &pos,
+                                          const double &available_flight_time, const waypoint::ptr &cur_waypoint, plan &cur_plan)
+{
+
+
 }
 
 void behaviour_planner::greedy()
 {
-    //plan_sensing_tour();
+    update_grid_gp(covered_cells_.begin(), covered_cells_.end());
+    update_segments(covered_cells_.begin(), covered_cells_.end());
+    covered_cells_.clear();
+
+    std::vector<grid_segment::ptr> segments;
+    for(auto &sp: segments_)
+    {
+        auto seg = sp.second;
+        seg->plan_coverage_path(12,6);
+
+        if(seg->is_valid())
+            segments.push_back(seg);
+    }
+
+    plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, plan_);
 }
 
 void behaviour_planner::semi_greedy()
