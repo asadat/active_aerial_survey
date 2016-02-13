@@ -75,7 +75,7 @@ void behaviour_controller::update_available_flight_time(bool turning_point)
 
 void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::ptr next_wp)
 {
-    if(prev_wp->get_type() != waypoint::type::HIGH_RESOLUTION &&
+    if(prev_wp->get_type() != waypoint::type::HIGH_RESOLUTION ||
             next_wp->get_type() != waypoint::type::HIGH_RESOLUTION)
         return;
 
@@ -89,8 +89,6 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
 
     do
     {
-        ROS_INFO("updating sensed cells: %f %f %f", p[0], p[1], p[2]);
-
         if(utility::distance_squared(p,ep) > step*step)
         {
             p += step*dir;
@@ -107,7 +105,8 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
         for(auto c:cells)
             c->set_sensed(true);
 
-    }while(flag);
+    }
+    while(flag);
 }
 
 void behaviour_controller::calculate_performace()

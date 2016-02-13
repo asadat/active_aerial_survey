@@ -13,14 +13,14 @@ class random_environment_generator
 public:
     static void generate(environment_model &environment, const long int &seed, const int &cluster_count, const int &percent_interesting)
     {
-        ROS_WARN("random environmnet generation: seed:%ld #cluster:%d percent_interesting:%d", seed, cluster_count, percent_interesting);
-
         auto used_seed = seed;
 
         if(used_seed<=0)
             used_seed = time(NULL);
 
         srand(used_seed);
+
+        ROS_WARN("random environmnet generation: seed:%ld #cluster:%d percent_interesting:%d", used_seed, cluster_count, percent_interesting);
 
 
         for(auto it=environment.grid_->begin(); it != environment.grid_->end(); it++)

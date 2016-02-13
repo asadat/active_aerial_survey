@@ -109,7 +109,7 @@ void sensor::draw()
 {
     gaussian_field::instance()->draw();
     glColor3f(1,1,0);
-    glPointSize(5);
+    glPointSize(3);
     glBegin(GL_POINTS);
     for(auto &p: sensing_locations_)
         utility::gl_vertex3f(p);

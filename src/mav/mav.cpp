@@ -87,17 +87,35 @@ void mav::draw()
     utility::gl_vertex3f(position_+l*Vector3f(0,1,0));
     glEnd();
 
-
-
-    glLineWidth(1);
+    glLineWidth(2);
     glColor3f(0.6, 0.6, 1);
     glBegin(GL_LINES);
     for(size_t i=0; i+1<positions_.size(); i++)
     {
-        utility::gl_vertex3f(positions_[i]);
-        utility::gl_vertex3f(positions_[i+1]);
+        if(fabs(active_survey_param::sensing_height-positions_[i][2]) < 0.1 &&
+                fabs(active_survey_param::sensing_height-positions_[i+1][2]) < 0.1)
+        {
+            utility::gl_vertex3f(positions_[i]);
+            utility::gl_vertex3f(positions_[i+1]);
+        }
     }
     glEnd();
+
+    glPushAttrib(GL_ENABLE_BIT);
+    glLineStipple(1, 0xAA);
+    glEnable(GL_LINE_STIPPLE);
+    glBegin(GL_LINES);
+    for(size_t i=0; i+1<positions_.size(); i++)
+    {
+        if(fabs(active_survey_param::sensing_height-positions_[i][2]) > 0.5 ||
+                fabs(active_survey_param::sensing_height-positions_[i+1][2]) > 0.5)
+        {
+            utility::gl_vertex3f(positions_[i]);
+            utility::gl_vertex3f(positions_[i+1]);
+        }
+    }
+    glEnd();
+    glPopAttrib();
 
 }
 

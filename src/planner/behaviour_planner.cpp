@@ -240,9 +240,23 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
     bool flag = true;
 
     cur_plan.push_front(cur_waypoint);
+
     waypoint::ptr curpos_waypoint = std::make_shared<waypoint>(pos);
     curpos_waypoint->set_action(waypoint::action::START_SENSING);
     cur_plan.push_front(curpos_waypoint);
+
+    //move curpos_waypoint a little forward
+    auto fp = mav_.sensor_.get_rect(pos);
+    double step_forward = 0.5*std::min(fabs(fp[0]-fp[2]),fabs(fp[1]-fp[3]));
+    bool has_curpos_wp = true;
+    if(utility::distance_squared(pos, cur_waypoint->get_position()) > step_forward*step_forward)
+        curpos_waypoint->set_position(pos+step_forward*(cur_waypoint->get_position()-pos).normalized());
+    else
+    {
+        has_curpos_wp = false;
+        cur_plan.pop_next_waypoint();
+    }
+
 
     plan coverage_plan;
 
@@ -279,7 +293,8 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
     if(coverage_plan.empty())
     {
         cur_plan.pop_next_waypoint();
-        cur_plan.pop_next_waypoint();
+        if(has_curpos_wp)
+            cur_plan.pop_next_waypoint();
     }
     else
     {
@@ -305,7 +320,6 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
                                                 const double &available_flight_time, const waypoint::ptr &cur_waypoint,
                                                 plan &cur_plan, plan &coverage_plan)
 {
-
     std::vector<Vector3f> seg_coverage_path;
     segment->get_coverage_path(seg_coverage_path);
 
@@ -400,7 +414,8 @@ void behaviour_planner::greedy()
     for(auto &sp: segments_)
     {
         auto seg = sp.second;
-        seg->plan_coverage_path(12,6);
+        seg->plan_coverage_path(2*active_survey_param::sensing_height,
+                                active_survey_param::sensing_height);
 
         if(seg->is_valid() && !seg->get_ignored())
             segments.push_back(seg);

@@ -631,20 +631,21 @@ void grid_segment::draw()
     glLineWidth(5);
     utility::gl_color(utility::get_altitude_color(get_label()));
 
-    if(true || !get_ignored())
+    if(true)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glBegin(GL_POLYGON);
 
-        for(auto it=begin_convexhull(); it!= end_convexhull(); it++)
+        for(auto it=begin_approx_poly(); it!= end_approx_poly(); it++)
             utility::gl_vertex3f(*it, 0.3);
 
         glEnd();
     }
-    glColor3f(0.5,0.1,0.6);
-    glPointSize(3);
+
+    //glColor3f(0.5,0.1,0.6);
+    glPointSize(15);
     glBegin(GL_POINTS);
-    for(auto cell:cells_)
+    for(auto cell:boundary_cells_)
         utility::gl_vertex3f(cell->get_center(), 0.4);
     glEnd();
 
