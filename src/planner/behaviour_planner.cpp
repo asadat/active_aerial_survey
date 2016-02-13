@@ -319,7 +319,10 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
 
         waypoint::ptr first_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
         seg_coverage_path.erase(seg_coverage_path.begin());
+
         first_waypoint->set_on_set_action(waypoint::action::STOP_SENSING);
+        first_waypoint->set_type(waypoint::type::HIGH_RESOLUTION);
+
         coverage_plan.push_back(first_waypoint);
     }
 

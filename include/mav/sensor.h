@@ -15,10 +15,10 @@ public:
 
     void sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr>&, const Vector3f&)> callback);
     void draw();
+    rect get_rect(const Vector3f &p) const;
 
 private:
     void perform_sense(Vector3f p, std::function<void(std::set<grid_cell::ptr>&, const Vector3f&)> callback);
-    rect get_rect(const Vector3f &p) const;
 
     grid_cell::ptr sense_cell(const Vector2f & p);
 

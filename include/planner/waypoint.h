@@ -13,6 +13,7 @@ class waypoint
 public:
 
     enum class action {NONE=0, START_SENSING, STOP_SENSING, INTERRUPT_WAYPOINT};
+    enum class type {COARSE=0, HIGH_RESOLUTION};
 
     typedef std::shared_ptr<waypoint> ptr;
     typedef std::function<void(ptr)> waypoint_call_back;
@@ -36,11 +37,16 @@ public:
     action get_on_set_action() const {return on_set_action_;}
     void set_on_set_action(const action &a){on_set_action_=a;}
 
+    type get_type() const {return type_;}
+    void set_type(const type &t){type_=t;}
+
 protected:
     Vector3f pos_;
     waypoint_call_back waypoint_call_back_;
     action action_;
     action on_set_action_;
+
+    type type_;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

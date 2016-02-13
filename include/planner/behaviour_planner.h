@@ -70,6 +70,8 @@ private:
     graph::ptr  graph_;
 
     std::function<double(void)> get_available_time_;
+
+    std::set<grid_cell> sensed_grid_cells_;
 };
 
 }

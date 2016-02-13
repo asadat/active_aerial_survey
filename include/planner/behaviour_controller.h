@@ -28,6 +28,8 @@ private:
     void start_sensing(bool override_min_travel_dist);
     void reduce_available_flight_time(double dt);
     void update_available_flight_time(bool turning_point);
+    void update_sensed_cells(waypoint::ptr prev_wp, waypoint::ptr next_wp);
+    void calculate_performace();
 
     Vector3f last_pos_flight_time_update;
 

@@ -40,6 +40,8 @@ void grid_cell::draw()
                   2*variance_);
     else if(active_survey_param::non_ros::cell_drawing_mode == 5)
         utility::gl_color(utility::get_altitude_color(label_));
+    else if(active_survey_param::non_ros::cell_drawing_mode == 6)
+        utility::gl_color(sensed_&&is_target()?Vector3f(1,1,1):Vector3f(0,0,0));
     else
     {
         if(is_covered())

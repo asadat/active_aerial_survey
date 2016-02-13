@@ -66,11 +66,61 @@ void behaviour_controller::update_available_flight_time(bool turning_point)
     auto mav_pos = mav_.get_position();
     double travelled_dist = utility::distance(mav_pos, last_pos_flight_time_update);
 
-    reduce_available_flight_time(travelled_dist/active_survey_param::speed);
+    reduce_available_flight_time(travelled_dist/active_survey_param::average_speed);
 
     last_pos_flight_time_update = mav_pos;
 
     //ROS_INFO_THROTTLE(2,"flight time: %f", avaiable_flight_time_);
+}
+
+void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::ptr next_wp)
+{
+    if(prev_wp->get_type() != waypoint::type::HIGH_RESOLUTION &&
+            next_wp->get_type() != waypoint::type::HIGH_RESOLUTION)
+        return;
+
+    Vector3f p = prev_wp->get_position();
+    Vector3f ep = next_wp->get_position();
+    Vector3f dir = (ep-p).normalized();
+
+    auto fp = mav_.sensor_.get_rect(p);
+    double step = std::min(fabs(fp[0]-fp[2]), fabs(fp[1]-fp[3]));
+    bool flag = true;
+
+    do
+    {
+        ROS_INFO("updating sensed cells: %f %f %f", p[0], p[1], p[2]);
+
+        if(utility::distance_squared(p,ep) > step*step)
+        {
+            p += step*dir;
+        }
+        else
+        {
+            p = ep;
+            flag = false;
+        }
+
+        fp = mav_.sensor_.get_rect(p);
+        std::set<grid_cell::ptr> cells;
+        mav_.get_grid().find_cells_in_rect(fp, cells, false);
+        for(auto c:cells)
+            c->set_sensed(true);
+
+    }while(flag);
+}
+
+void behaviour_controller::calculate_performace()
+{
+    size_t sensed_cells_count=0;
+    for(auto it=mav_.get_grid().begin(); it !=mav_.get_grid().end(); ++it)
+        if((*it)->is_sensed() && (*it)->is_target())
+            sensed_cells_count++;
+
+    auto cell_size = mav_.get_grid().get_cell_size();
+    double sensed_area = sensed_cells_count * cell_size[0] * cell_size[1];
+
+    ROS_INFO("RESULT -> sensed area: %.1f", sensed_area);
 }
 
 void behaviour_controller::update(const double &dt)
@@ -89,27 +139,27 @@ void behaviour_controller::update(const double &dt)
         }
         else
         {
-          switch_to_next_waypoint = true;
+            switch_to_next_waypoint = true;
 
-          if(waypoint_)
-          {
-              auto wp_action = waypoint_->get_action();
-              switch(wp_action)
-              {
+            if(waypoint_)
+            {
+                auto wp_action = waypoint_->get_action();
+                switch(wp_action)
+                {
                 case waypoint::action::START_SENSING:
-                  sensing_ = true;
-                  break;
+                    sensing_ = true;
+                    break;
                 case waypoint::action::STOP_SENSING:
-                  //start_sensing(true);
-                  sensing_ = false;
-                  break;
+                    //start_sensing(true);
+                    sensing_ = false;
+                    break;
                 case waypoint::action::NONE:
                 default:
-                  break;
-              }
-              waypoint_->on_reached_waypoint(waypoint_);
-          }
-      }
+                    break;
+                }
+                waypoint_->on_reached_waypoint(waypoint_);
+            }
+        }
     }
     else
     {
@@ -124,20 +174,25 @@ void behaviour_controller::update(const double &dt)
 
         update_available_flight_time(true);
 
+        waypoint::ptr prev_waypoint = waypoint_;
         waypoint_ = behaviour_planner_->get_next_waypoint();
+
+        if(waypoint_ && prev_waypoint)
+            update_sensed_cells(prev_waypoint, waypoint_);
+
         if(waypoint_)
         {
             auto wp_action = waypoint_->get_on_set_action();
             switch(wp_action)
             {
-              case waypoint::action::START_SENSING:
+            case waypoint::action::START_SENSING:
                 sensing_ = true;
                 break;
-              case waypoint::action::STOP_SENSING:
+            case waypoint::action::STOP_SENSING:
                 sensing_ = false;
                 break;
-              case waypoint::action::NONE:
-              default:
+            case waypoint::action::NONE:
+            default:
                 break;
             }
 
@@ -145,7 +200,9 @@ void behaviour_controller::update(const double &dt)
         }
         else
         {
-          ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer!");
+            calculate_performace();
+            mav_.stop();
+            ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer! (remaining flight time: %.fs)", get_available_flight_time());
         }
     }
 

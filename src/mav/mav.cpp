@@ -39,7 +39,12 @@ void mav::update(const double &dt)
 void mav::update_state(const double &dt)
 {
     velocity_ = mav_controller_.get_velocity(goal_, position_);
-    position_ += dt*velocity_;
+    auto d = dt*velocity_;
+
+    if(utility::distance_squared(position_, goal_) < d.squaredNorm())
+        position_ = goal_;
+    else
+        position_ += d;
 }
 
 bool mav::at_goal()
