@@ -1,4 +1,4 @@
 active_survey
 ===
 
-Active aerial survey
+This is a simulation with algorithms for active aerial survey using an unmanned aerial vehicle.
