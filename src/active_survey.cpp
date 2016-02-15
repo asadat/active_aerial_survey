@@ -133,7 +133,7 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
 {    
     if(key['1'])
     {
-        environment_model::instance()->generate_environment();
+        environment_model::instance()->generate_environment(true);
         updateKey = false;
     }
     else if(key['2'])

@@ -63,14 +63,13 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   image_transport
   cv_bridge
-  pelican_ctrl
   )
 
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 
-  CATKIN_DEPENDS roscpp rospy  geometry_msgs  std_msgs  nav_msgs  message_generation  image_transport  cv_bridge  pelican_ctrl  )
+  CATKIN_DEPENDS roscpp rospy  geometry_msgs  std_msgs  nav_msgs  message_generation  image_transport  cv_bridge )
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include

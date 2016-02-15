@@ -26,9 +26,13 @@ void environment_model::draw()
         grid_->draw();
 }
 
-void environment_model::generate_environment()
+void environment_model::generate_environment(bool randomize)
 {
-    random_environment_generator::generate(*this, active_survey_param::random_seed, 4, active_survey_param::percent_interesting);
+    double selected_seed=-1;
+    if(!randomize)
+        selected_seed = active_survey_param::random_seed;
+
+    random_environment_generator::generate(*this, selected_seed, 4, active_survey_param::percent_interesting);
 }
 
 void environment_model::get_environment_polygon(polygon &poly)

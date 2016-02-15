@@ -266,13 +266,15 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
         grid_segment::ptr max_fac_seg = nullptr;
         for(auto &seg: segments)
         {
-            if(seg->get_ignored())
+            if(seg->is_selected())
                 continue;
 
             double reaching_cost = seg->get_reaching_cost(pos);
             double value = seg->get_segment_value();
-
             double fac =value/reaching_cost;
+
+            ROS_INFO("segment fac value: %.2f", fac);
+
             if(max_fac < fac)
             {
                 max_fac = fac;
@@ -283,11 +285,22 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
 
         if(max_fac_seg)
         {
+            ROS_INFO("selected segment value: %f reaching cost: %f label %d",
+                     max_fac_seg->get_segment_value(), max_fac_seg->get_reaching_cost(pos), max_fac_seg->get_label());
+
+            size_t before_coverage_size = coverage_plan.size();
             flag = construct_coverage_plan(max_fac_seg, pos, available_flight_time, cur_waypoint, cur_plan, coverage_plan);
+
+            if(before_coverage_size != coverage_plan.size())
+                max_fac_seg->set_selected(true);
+
             max_fac_seg->set_ignored();
         }
         else
+        {
+            ROS_INFO("No segment is selected");
             flag = false;
+        }
     }
 
     if(coverage_plan.empty())
@@ -324,7 +337,7 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
     segment->get_coverage_path(seg_coverage_path);
 
     if(seg_coverage_path.size() < 2)
-        return true;
+        return false;
 
     while(coverage_plan.cost(pos, cur_plan) < available_flight_time)
     {
@@ -421,12 +434,18 @@ void behaviour_planner::greedy()
             segments.push_back(seg);
     }
 
-    ROS_INFO(" before planning .....");
+    //ROS_INFO(" before planning .....");
     plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, plan_);
-    ROS_INFO(" after planning ......");
+    //ROS_INFO(" after planning ......");
 
     for(auto seg:segments)
         seg->set_ignored();
+
+    components_mutex_.lock();
+    segments.clear();
+    components_.clear();
+    graph_->clear();
+    components_mutex_.unlock();
 }
 
 void behaviour_planner::semi_greedy()

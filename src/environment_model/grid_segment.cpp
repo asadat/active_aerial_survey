@@ -11,7 +11,8 @@ namespace asn
 
 grid_segment::grid_segment(grid &grd, grid_cell::ptr seed_cell, grid_cell_base::label label):
     graph_node(),
-    grid_(grd)
+    grid_(grd),
+    is_selected_(false)
 {
     cells_.insert(seed_cell);
     seed_cell->set_label(label);
@@ -643,7 +644,11 @@ void grid_segment::draw()
     }
 
     //glColor3f(0.5,0.1,0.6);
-    glPointSize(15);
+    if(is_selected_)
+        glPointSize(15);
+    else
+        glPointSize(5);
+
     glBegin(GL_POINTS);
     for(auto cell:boundary_cells_)
         utility::gl_vertex3f(cell->get_center(), 0.4);

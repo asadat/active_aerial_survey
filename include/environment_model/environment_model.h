@@ -27,7 +27,7 @@ public:
 
     ~environment_model();
 
-    void generate_environment();
+    void generate_environment(bool randomize=false);
     void draw();
     void get_environment_polygon(polygon &poly);
 

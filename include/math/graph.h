@@ -26,6 +26,8 @@ public:
     void draw();
     size_t size() const {return nodes_.size();}
 
+    void clear();
+
     /*
      * Remove node from the nodes list
      * NOTE: this should be used only

@@ -72,6 +72,8 @@ public:
     void set_ignored();
     bool get_ignored() const {return (*begin())->is_ignored();}
 
+    void set_selected(bool selected){is_selected_=selected;}
+    bool is_selected() const {return is_selected_;}
 private:
     grid_segment()=delete;
     void remove_skinny_part(grid_cell::ptr cell);
@@ -87,6 +89,8 @@ private:
     double coverage_path_cost_;
     std::vector<Vector3f> coverage_path_;
     bool is_line_;
+
+    bool is_selected_;
 
     polygon approximate_polygon_;
     polygon convexhull_;

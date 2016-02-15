@@ -57,6 +57,14 @@ void graph::reset_nodes_flags()
         n->flags_=0;
 }
 
+void graph::clear()
+{
+    for(auto node:nodes_)
+        node->neighbours_.clear();
+
+    nodes_.clear();
+}
+
 void graph::draw()
 {
     if(nodes_.empty())

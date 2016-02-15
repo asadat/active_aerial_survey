@@ -65,7 +65,7 @@ private:
     std::set<grid_cell::ptr> covered_cells_;
     std::mutex components_mutex_;
     std::vector<graph::ptr> components_;
-    std::vector<graph::ptr> planned_components_;
+    //std::vector<graph::ptr> planned_components_;
 
     graph::ptr  graph_;
 

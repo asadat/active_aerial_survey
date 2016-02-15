@@ -33,6 +33,8 @@ public:
     double get_overall_cost(waypoint::ptr from=nullptr);
     double cost(const Vector3f &cur_pos, const plan &next_plan);
 
+    size_t size() const {return waypoints_.size();}
+
 private:
     std::vector<waypoint::ptr> waypoints_;
 };

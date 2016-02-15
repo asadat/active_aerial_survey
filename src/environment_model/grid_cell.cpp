@@ -35,9 +35,9 @@ void grid_cell::draw()
                   2*variance_,
                   2*variance_);
     else if(active_survey_param::non_ros::cell_drawing_mode == 4)
-        glColor3f(2*variance_,
+        glColor4f(2*variance_,
                   ((1-variance_)<0?0:(1-variance_))*estimated_value_,
-                  2*variance_);
+                  2*variance_, ignored_?0.3:1.0);
     else if(active_survey_param::non_ros::cell_drawing_mode == 5)
         utility::gl_color(utility::get_altitude_color(label_));
     else if(active_survey_param::non_ros::cell_drawing_mode == 6)
