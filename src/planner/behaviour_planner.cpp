@@ -257,8 +257,9 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
         cur_plan.pop_next_waypoint();
     }
 
-
     plan coverage_plan;
+
+    Vector3f switching_pos = pos;
 
     while(flag)
     {
@@ -269,7 +270,7 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
             if(seg->is_selected())
                 continue;
 
-            double reaching_cost = seg->get_reaching_cost(pos);
+            double reaching_cost = seg->get_reaching_cost(switching_pos);
             double value = seg->get_segment_value();
             double fac =value/reaching_cost;
 
@@ -286,10 +287,10 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
         if(max_fac_seg)
         {
             ROS_INFO("selected segment value: %f reaching cost: %f label %d",
-                     max_fac_seg->get_segment_value(), max_fac_seg->get_reaching_cost(pos), max_fac_seg->get_label());
+                     max_fac_seg->get_segment_value(), max_fac_seg->get_reaching_cost(switching_pos), max_fac_seg->get_label());
 
             size_t before_coverage_size = coverage_plan.size();
-            flag = construct_coverage_plan(max_fac_seg, pos, available_flight_time, cur_waypoint, cur_plan, coverage_plan);
+            flag = construct_coverage_plan(max_fac_seg, switching_pos, available_flight_time, cur_waypoint, cur_plan, coverage_plan);
 
             if(before_coverage_size != coverage_plan.size())
                 max_fac_seg->set_selected(true);
@@ -301,6 +302,9 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
             ROS_INFO("No segment is selected");
             flag = false;
         }
+
+        if(!coverage_plan.empty())
+            switching_pos = coverage_plan.back()->get_position();
     }
 
     if(coverage_plan.empty())
@@ -339,6 +343,10 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
     if(seg_coverage_path.size() < 2)
         return false;
 
+    if(utility::distance_squared(seg_coverage_path.front(), pos) >
+            utility::distance_squared(seg_coverage_path.back(), pos))
+        std::reverse(seg_coverage_path.begin(), seg_coverage_path.end());
+
     while(coverage_plan.cost(pos, cur_plan) < available_flight_time)
     {
         if(seg_coverage_path.empty())
@@ -354,67 +362,6 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
     }
 
     return seg_coverage_path.empty();
-
-//    double remaining_survey_cost = cur_plan.get_overall_cost(cur_waypoint);
-//    double reaching_cost = segment->get_reaching_cost(pos);
-//    double extra_coverage_time = available_flight_time - remaining_survey_cost -
-//            3*active_survey_param::turning_time - utility::distance(pos, cur_waypoint->get_position())
-//            - reaching_cost;
-
-//    if(extra_overage_time > 0.0)
-//    {
-//        plan coverage_plan;
-
-//        // current survey waypoint
-//        //coverage_plan.push_back(cur_waypoint);
-
-//        // current position for comming back
-//        waypoint::ptr curpos_waypoint = std::make_shared<waypoint>(pos);
-//        curpos_waypoint->set_action(waypoint::action::START_SENSING);
-//        //coverage_plan.push_front(curpos_waypoint);
-
-//        if(utility::distance_squared(pos, seg_coverage_path.back()) >
-//                utility::distance_squared(pos, seg_coverage_path.front()))
-//            std::reverse(seg_coverage_path.begin(), seg_coverage_path.end());
-
-//        waypoint::ptr first_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
-//        seg_coverage_path.erase(seg_coverage_path.begin());
-//        coverage_plan.push_back(first_waypoint);
-
-//        bool flag = true;
-//        while(flag)
-//        {
-//            double lap_cost = utility::distance(coverage_plan.back()->get_position(), seg_coverage_path.front()) +
-//                    active_survey_param::turning_time;
-
-//            if(extra_coverage_time > lap_cost)
-//            {
-//                extra_coverage_time -= lap_cost;
-//                waypoint::ptr coverage_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
-//                seg_coverage_path.erase(seg_coverage_path.begin());
-//                coverage_plan.push_back(coverage_waypoint);
-//            }
-//            else
-//            {
-//                flag = false;
-//            }
-
-//            if(seg_coverage_path.empty())
-//                flag = false;
-//        }
-
-//        coverage_plan.push_back(curpos_waypoint);
-//        coverage_plan.push_back(cur_waypoint);
-
-//        if(seg_coverage_path.empty())
-//            return true;
-//        else
-//            return false;
-//    }
-//    else
-//    {
-//        return false;
-//    }
 }
 
 void behaviour_planner::greedy()

@@ -18,7 +18,7 @@ time_limit: 3500
 turning_time: 5.0
 random_seed: 1455329048
 gp_sigma: 0.1
-exploitation_rate: 0.2
+exploitation_rate: 0.05
 coarse_coverage_height: 10.0
 sensing_height: 2.0
 average_speed: 1.0
