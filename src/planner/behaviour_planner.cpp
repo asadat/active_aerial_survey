@@ -95,9 +95,6 @@ void behaviour_planner::update_grid_gp(const cell_iterator &begin_it, const cell
 
 void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells, const Vector3f &sensing_position)
 {
-    if(active_survey_param::speed < 100)
-        update_grid_gp(mav_.get_grid().begin(), mav_.get_grid().end());
-
     last_sensing_position_ = sensing_position;
 
     for(auto cell:covered_cells)
@@ -107,6 +104,9 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
 
     if(covered_cells_.size() > mav_.get_grid().cells_count()*active_survey_param::exploitation_rate)
     {
+        if(active_survey_param::speed < 100)
+            update_grid_gp(mav_.get_grid().begin(), mav_.get_grid().end());
+
 
         //update_grid_gp();
         //update_segments();

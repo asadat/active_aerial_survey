@@ -168,12 +168,12 @@ static void gl_vertex3f(const Vector2f& v, const double & z)
     glVertex3f(v[0], v[1], z);
 }
 
-static void draw_quad(const rect &r)
+static void draw_quad(const rect &r, const double &z=0)
 {
-    glVertex2f(r[0],r[1]);
-    glVertex2f(r[2],r[1]);
-    glVertex2f(r[2],r[3]);
-    glVertex2f(r[0],r[3]);
+    glVertex3f(r[0],r[1], z);
+    glVertex3f(r[2],r[1], z);
+    glVertex3f(r[2],r[3], z);
+    glVertex3f(r[0],r[3], z);
 }
 
 static Vector3f get_altitude_color(const double& h)

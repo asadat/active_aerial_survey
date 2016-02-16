@@ -35,8 +35,18 @@ void grid_cell::draw()
                   2*variance_,
                   2*variance_);
     else if(active_survey_param::non_ros::cell_drawing_mode == 4)
-        glColor4f(estimated_value_+ variance_, estimated_value_+ variance_,
-                  estimated_value_+ variance_,1);
+    {
+        double beta = 0.9;
+        double thr = 0.3;
+        bool l = (estimated_value_+ beta*variance_ < thr);
+        bool h = (estimated_value_- beta*variance_ > thr);
+        bool u = !(l||h);
+        glColor3f(l?1:0,
+                  h?1:0,
+                  u?1:0);
+        //glColor4f(estimated_value_+ variance_, estimated_value_+ variance_,
+        //          estimated_value_+ variance_,1);
+    }
 //        glColor4f(2*variance_,
 //                  ((1-variance_)<0?0:(1-variance_))*estimated_value_,
 //                  2*variance_, ignored_?0.3:1.0);
@@ -55,6 +65,15 @@ void grid_cell::draw()
     glBegin(GL_QUADS);
     utility::draw_quad(get_rect());
     glEnd();
+
+    if(ground_truth_value_ >0.3)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColor3f(0.1,1,0.1);
+        glBegin(GL_QUADS);
+        utility::draw_quad(get_rect(), 0.1);
+        glEnd();
+    }
 }
 
 bool grid_cell::is_target() const

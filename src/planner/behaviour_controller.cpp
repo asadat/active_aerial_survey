@@ -116,10 +116,10 @@ void behaviour_controller::calculate_performace()
 
     for(auto it=mav_.get_grid().begin(); it !=mav_.get_grid().end(); ++it)
     {
-        if((*it)->is_sensed() && (*it)->is_target())
+        if((*it)->is_covered() && (*it)->is_sensed() && (*it)->is_target())
             sensed_targets++;
 
-        if((*it)->is_sensed() && (*it)->has_label())
+        if((*it)->is_covered() && (*it)->is_sensed() && (*it)->has_label())
             sensed_poly_cells++;
     }
 
