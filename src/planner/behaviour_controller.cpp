@@ -111,15 +111,23 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
 
 void behaviour_controller::calculate_performace()
 {
-    size_t sensed_cells_count=0;
+    size_t sensed_poly_cells = 0;
+    size_t sensed_targets = 0;
+
     for(auto it=mav_.get_grid().begin(); it !=mav_.get_grid().end(); ++it)
+    {
         if((*it)->is_sensed() && (*it)->is_target())
-            sensed_cells_count++;
+            sensed_targets++;
+
+        if((*it)->is_sensed() && (*it)->has_label())
+            sensed_poly_cells++;
+    }
 
     auto cell_size = mav_.get_grid().get_cell_size();
-    double sensed_area = sensed_cells_count * cell_size[0] * cell_size[1];
+    double sensed_target_area = sensed_targets * cell_size[0] * cell_size[1];
+    double sensed_poly_area = sensed_poly_cells * cell_size[0] * cell_size[1];
 
-    ROS_INFO("RESULT -> sensed area: %.1f", sensed_area);
+    ROS_INFO("RESULT -> sensed polygons: %.1f sensed target: %.1f", sensed_poly_area, sensed_target_area);
 }
 
 void behaviour_controller::update(const double &dt)
