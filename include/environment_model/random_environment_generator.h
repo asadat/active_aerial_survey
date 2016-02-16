@@ -22,6 +22,8 @@ public:
 
         ROS_WARN("random environmnet generation: seed:%ld #cluster:%d percent_interesting:%d", used_seed, cluster_count, percent_interesting);
 
+        const size_t desired_target_cell_count = environment.grid_->cells_count() * (percent_interesting*0.01);
+        size_t target_cell_count = 0;
 
         for(auto it=environment.grid_->begin(); it != environment.grid_->end(); it++)
         {
@@ -40,16 +42,21 @@ public:
            auto c = environment.grid_->get_cell({gx, gy});
            if(c)
            {
+               target_cell_count++;
                c->set_ground_truth_value(0.5);
                c->set_estimated_value(0.5);
                growing_regions.push_back(c);
            }
         }
 
-        int iterations_count = compute_cellular_automata_steps(s[0]*s[1]*percent_interesting/100.0, cluster_count);
-        for(int i=0; i<4*iterations_count; i++)
+        //int iterations_count = compute_cellular_automata_steps(s[0]*s[1]*percent_interesting/100.0, cluster_count);
+        //for(int i=0; i<4*iterations_count; i++)
+        while(target_cell_count < desired_target_cell_count)
         {
-            cellular_automata_step(environment, growing_regions);
+            if(!growing_regions.empty())
+                ROS_INFO("desired: %ld current: %ld growing: %ld", desired_target_cell_count, target_cell_count, growing_regions.size());
+
+            cellular_automata_step(environment, growing_regions, target_cell_count, desired_target_cell_count);
         }
 
 
@@ -81,11 +88,20 @@ public:
     }
 
 private:
-    static void cellular_automata_step(environment_model &environment, vector<grid_cell::ptr> &regions)
+    static void cellular_automata_step(environment_model &environment, vector<grid_cell::ptr> &regions,
+                                       size_t &target_cell_count, const size_t & desired_cell_count)
     {
         vector<grid_cell::ptr> newregions;
-        for(auto c: regions)
+        while(!regions.empty())
         {
+            auto c = regions.front();
+            regions.erase(regions.begin());
+
+            if(target_cell_count >= desired_cell_count)
+                break;
+
+            bool flag = false;
+            bool all_done = true;
             for(size_t selector=0; selector<4; selector++)
             {
                 auto nb = environment.grid_->get_neighbour_cell_4(c, selector);
@@ -93,17 +109,23 @@ private:
                 {
                     if(nb->get_ground_truth_value() < 0.4 && nb->get_estimated_value() < 0.4)
                     {
-                        if(utility::random_number(0,100) < 50)
+                        all_done = false;
+                        if(utility::random_number(0,100) < 20)
                         {
+                            target_cell_count++;
                             nb->set_ground_truth_value(0.5);
                             newregions.push_back(nb);
+                            flag = true;
                         }
                     }
                 }
              }
+
+            if(!all_done && !flag)
+                regions.push_back(c);
         }
 
-        regions.clear();
+        //regions.clear();
         for(auto c: newregions)
         {
             c->set_estimated_value(c->get_ground_truth_value());
