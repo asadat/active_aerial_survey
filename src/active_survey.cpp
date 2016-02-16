@@ -176,6 +176,19 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
     {
         mav_->resume();
     }
+    else if(key['u'])
+    {
+        for(auto cit=environment_model::instance()->get_grid()->begin();
+            cit!=environment_model::instance()->get_grid()->end(); ++cit)
+        {
+            auto &cell = *cit;
+            double x[] = {cell->get_center()[0],cell->get_center()[1]};
+            cell->set_estimated_value(gaussian_field::instance()->f(x));
+            cell->set_variance(gaussian_field::instance()->var(x));
+        }
+
+    }
+
 
 //    else if(key['w'])
 //    {

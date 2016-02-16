@@ -100,7 +100,7 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
     for(auto cell:covered_cells)
         covered_cells_.insert(cell);
 
-   // ROS_INFO("#unprocessed cells: %ld", covered_cells_.size());
+   ROS_INFO("#unprocessed cells: %ld", covered_cells_.size());
 
     if(covered_cells_.size() > mav_.get_grid().cells_count()*active_survey_param::exploitation_rate)
     {
@@ -274,7 +274,9 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
             double value = seg->get_segment_value();
             double fac =value/reaching_cost;
 
-            ROS_INFO("segment fac value: %.2f", fac);
+            //auto color = seg->get_color();
+
+            ROS_INFO("val: %.1f r_cost: %.1f fac_v: %.1f l: %u", value, reaching_cost, fac, seg->get_label());
 
             if(max_fac < fac)
             {
@@ -286,7 +288,7 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
 
         if(max_fac_seg)
         {
-            ROS_INFO("selected segment value: %f reaching cost: %f label %d",
+            ROS_INFO("selected seg: %.1f reaching cost: %.1f label %d",
                      max_fac_seg->get_segment_value(), max_fac_seg->get_reaching_cost(switching_pos), max_fac_seg->get_label());
 
             size_t before_coverage_size = coverage_plan.size();
@@ -319,10 +321,10 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
             {
                 coverage_plan.back()->set_waypoint_call_back([](waypoint::ptr wp_ptr)
                 {
-                    ROS_INFO("WP CB: %f %f %f Coverage WP",
-                            wp_ptr->get_position()[0],
-                            wp_ptr->get_position()[1],
-                            wp_ptr->get_position()[2]);
+//                    ROS_INFO("WP CB: %f %f %f Coverage WP",
+//                            wp_ptr->get_position()[0],
+//                            wp_ptr->get_position()[1],
+//                            wp_ptr->get_position()[2]);
                 });
 
                 cur_plan.push_front(coverage_plan.back());
@@ -379,6 +381,11 @@ void behaviour_planner::greedy()
 
         if(seg->is_valid() && !seg->get_ignored())
             segments.push_back(seg);
+        else
+        {
+            ROS_INFO("invalid segment exists: l: %u value: %.1f coverage_path_size: %ld", seg->get_label(),
+                     seg->get_segment_value(), seg->get_coverage_path_waypoint_count());
+        }
     }
 
     //ROS_INFO(" before planning .....");

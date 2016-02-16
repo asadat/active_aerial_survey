@@ -36,6 +36,8 @@ public:
         return std::make_shared<environment_model>(dummy_());
     }
 
+    inline std::shared_ptr<grid> get_grid() const {return grid_;}
+
 private:
     static std::shared_ptr<environment_model> instance_;
 

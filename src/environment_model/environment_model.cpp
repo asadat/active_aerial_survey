@@ -32,7 +32,7 @@ void environment_model::generate_environment(bool randomize)
     if(!randomize)
         selected_seed = active_survey_param::random_seed;
 
-    random_environment_generator::generate(*this, selected_seed, 4, active_survey_param::percent_interesting);
+    random_environment_generator::generate(*this, selected_seed, active_survey_param::patches, active_survey_param::percent_interesting);
 }
 
 void environment_model::get_environment_polygon(polygon &poly)

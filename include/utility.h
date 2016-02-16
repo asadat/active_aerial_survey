@@ -30,7 +30,28 @@ static Vector3f augment(const Vector2f &v, const float &val)
 
 static double angle(const Vector2f &a, const Vector2f &b, const Vector2f &c)
 {
-    return acos((a-b).dot(c-b) / (sqrt((a-b).dot(a-b))*sqrt((c-b).dot(c-b))) );
+    auto v = a-b;
+    auto u = c-b;
+//    auto dot = v.dot(u);
+//    auto det = v[0]*u[1]-v[1]*u[0];
+//    auto ang = fabs(atan2(det, dot));
+//    //ang += ang<0?2*3.1415:0;
+//    return ang;
+
+    auto dot1 = (v).dot(v);
+    auto dot2 = (u).dot(u);
+
+    auto val = (v).dot(u) / (sqrt(dot1)*sqrt(dot2));
+    auto ang = acos(val);
+    //if(!(v>=-1 && v<=1))
+    if(isnan(ang))
+    {
+        ROS_INFO("v: %.2f ang: %.2f dot1: %.2f dot2: %.2f PS: %.2f %.2f %.2f %.2f %.2f %.2f UV: %.2f %.2f %.2f %.2f",
+                 val, ang, dot1, dot2, a[0], a[1], b[0], b[1], c[0], c[1], v[0], v[1], u[0], u[1]);
+        return 0;
+    }
+    return ang;
+
 }
 
 //static double distance_squared(const Vector2f &a, const Vector2f &b)

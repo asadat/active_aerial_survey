@@ -60,7 +60,8 @@ void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::pt
     for(int i=0; i<n; i++)
         for(int j=0; j<n; j++)
         {
-            Vector2f v(fp[0]+dx*(0.5+i), fp[1]+dy*(0.5+j));
+            //Vector2f v(fp[0]+dx*(0.5+i), fp[1]+dy*(0.5+j));
+            Vector2f v(fp[0]+2*dx*(0.165+i*0.66), fp[1]+2*dy*(0.165+j*0.66));
             center += v;
             sense_cell(v);
 //            auto cell = environment_model_.grid_->find_cell_contains(v);
@@ -73,8 +74,8 @@ void sensor::perform_sense(Vector3f p, std::function<void(std::set<grid_cell::pt
 //            }
         }
 
-//    center *= 0.25;
-//    sense_cell(center);
+    center *= 0.25;
+    sense_cell(center);
 
     rect update_rect = fp;
     //update_rect += rect(-15,-15,15,15);

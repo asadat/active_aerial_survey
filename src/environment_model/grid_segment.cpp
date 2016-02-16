@@ -163,6 +163,7 @@ void grid_segment::find_approximate_polygon()
         }
     }
 
+    // find the boundary cells
     set<grid_cell::ptr> nds;
     for(auto nd:cells_)
     {
@@ -201,13 +202,14 @@ void grid_segment::find_approximate_polygon()
     approximate_poly_cells_.push_back(*minit);
     nds.erase(minit);
 
+    // sort the boundary nodes
     while(!nds.empty())
     {
         auto cell = approximate_poly_cells_.back();
         size_t i=0;
         for(; i<8; i++)
         {
-            auto nb = grid_.get_neighbour_cell_8(cell, i);
+            auto nb = grid_.get_neighbour_cell_8(cell, (i+1)%8);
             if(!nb)
                 continue;
 
@@ -220,9 +222,9 @@ void grid_segment::find_approximate_polygon()
             }
         }
 
-        if(i>=8)
+        if(i>=8 && !nds.empty())
         {
-            //ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %d %d", node->grd_x, node->grd_y);
+            ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %u c: %.2f %.2f %.2f", get_label(), get_color()[0], get_color()[1], get_color()[2]);
             break;
         }
     }
@@ -278,9 +280,12 @@ void grid_segment::find_approximate_polygon()
 
 void grid_segment::find_convexhull()
 {
+    ROS_INFO("Convexhull l: %u #approx: %ld", get_label(), approximate_polygon_.size());
+
     convexhull_.clear();
     if(approximate_polygon_.size()<3)
     {
+        ROS_ERROR("CH l: %u approx_poly.size() < 3", get_label());
         return;
     }
 
@@ -326,11 +331,13 @@ void grid_segment::find_convexhull()
 
     if(is_line_)
     {
+        ROS_INFO("Convex hull detected line.");
         convexhull_.clear();
         std::copy(approximate_polygon_.begin(), approximate_polygon_.end(), std::back_inserter(convexhull_));
     }
     else
     {
+        auto approximate_polygon = approximate_polygon_;
         bool added_new_vertex = true;
         // the rest of the nodes
         while(added_new_vertex)
@@ -338,21 +345,40 @@ void grid_segment::find_convexhull()
             const auto &p1 = *(--(--convexhull_.end()));
             const auto &p2 = convexhull_.back();
 
-            const auto next = std::max_element(approximate_polygon_.begin(), approximate_polygon_.end(),
+            const auto next = std::max_element(approximate_polygon.begin(), approximate_polygon.end(),
                                          [&p1, &p2](const Vector2f &v, const Vector2f &u)
               {
-                  if(utility::close_enough(p2,u))
-                      return false;
-                  else if(utility::close_enough(p2,v))
-                      return true;
+//                  if(utility::close_enough(p2,u))
+//                  {
+//                      ROS_INFO("CH compare!!!");
+//                      return false;
+//                  }
+//                  else if(utility::close_enough(p2,v))
+//                  {
+//                      ROS_INFO("CH compare!!!");
+//                      return true;
+//                  }
 
                   return utility::angle(p1, p2, v) < utility::angle(p1, p2, u);
               });
 
-            if(next != approximate_polygon_.end())
+            if(next != approximate_polygon.end())
             {
-                if(std::find(convexhull_.begin(), convexhull_.end(), *next) != convexhull_.end())
-                   added_new_vertex=false;
+
+                ROS_INFO("CH angle: %.2f %f %f %f %f %f %f", utility::angle(p1, p2, *next), p1[0], p1[1], p2[0], p2[1], (*next)[0], (*next)[1]);
+            }
+            else
+                ROS_INFO("CH angle: No min");
+
+            if(next != approximate_polygon.end())
+            {
+                //if(std::find(convexhull_.begin(), convexhull_.end(), *next) != convexhull_.end())
+                //   added_new_vertex=false;
+                //else
+                //    convexhull_.push_back(*next);
+
+                if(utility::close_enough(convexhull_.front(), *next))
+                    added_new_vertex = false;
                 else
                     convexhull_.push_back(*next);
             }
@@ -362,34 +388,45 @@ void grid_segment::find_convexhull()
             }
         }
 
-        // remove extra nodes (colinear edges)
-        size_t sz = convexhull_.size();
-
-        for(int i=0; i < (int)convexhull_.size(); i++)
+        ROS_INFO("Convexhull l: %u #before_simplification: %ld", get_label(), convexhull_.size());
+        if(convexhull_.size() == 2)
         {
-            sz = convexhull_.size();
+            ROS_WARN("P1: %.1f %.1f P2: %.1f %.1f",
+                     convexhull_[0][0], convexhull_[0][1],
+                     convexhull_[1][0], convexhull_[1][1]);
+        }
+        else
+        {
+            // remove extra nodes (colinear edges)
+            size_t sz = convexhull_.size();
 
-            int i1 = ((i-1)+sz)%sz;
-            int i2 = i;
-            int i3 = (i+1)%sz;
-
-            Vector2f v = convexhull_[i2] - convexhull_[i1];
-            Vector2f u = convexhull_[i3] - convexhull_[i2];
-
-            Vector3f v3(v[0], v[1], 0.0);
-            Vector3f u3(u[0], u[1], 0.0);
-
-            auto r = u3.cross(v3);
-
-            if(sqrt(r.dot(r)) < 0.1)
+            for(int i=0; i < (int)convexhull_.size(); i++)
             {
-                convexhull_.erase(convexhull_.begin()+i);
-                i--;
+                sz = convexhull_.size();
+
+                int i1 = ((i-1)+sz)%sz;
+                int i2 = i;
+                int i3 = (i+1)%sz;
+
+                Vector2f v = convexhull_[i2] - convexhull_[i1];
+                Vector2f u = convexhull_[i3] - convexhull_[i2];
+
+                Vector3f v3(v[0], v[1], 0.0);
+                Vector3f u3(u[0], u[1], 0.0);
+
+                auto r = u3.cross(v3);
+
+                if(sqrt(r.dot(r)) < 0.1)
+                {
+                    convexhull_.erase(convexhull_.begin()+i);
+                    i--;
+                }
             }
         }
     }
 
-    std::reverse(convexhull_.begin(), convexhull_.end());
+    //std::reverse(convexhull_.begin(), convexhull_.end());
+    ROS_INFO("Convexhull l: %u #ch: %ld", get_label(), convexhull_.size());
 }
 
 bool grid_segment::find_base_edge(size_t &first_index, size_t &second_index, double &convexhull_height) const
@@ -629,41 +666,61 @@ void grid_segment::set_ignored()
 
 void grid_segment::draw()
 {
-    glLineWidth(5);
-    utility::gl_color(utility::get_altitude_color(get_label()));
+    glLineWidth(3);
+    utility::gl_color(get_color());
 
-    if(true)
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBegin(GL_POLYGON);
+    double dc=1;
+    if(!approximate_polygon_.empty())
+        dc = 1.0/approximate_polygon_.size();
+    double i=0;
+    for(auto it=begin_approx_poly(); it!= end_approx_poly(); it++)
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBegin(GL_POLYGON);
-
-        for(auto it=begin_approx_poly(); it!= end_approx_poly(); it++)
-            utility::gl_vertex3f(*it, 0.3);
-
-        glEnd();
+        glColor3f(i*dc, 0,1);
+        utility::gl_vertex3f(*it, 0.3);
+        i+=1.0;
     }
 
-    //glColor3f(0.5,0.1,0.6);
-    if(is_selected_)
-        glPointSize(15);
-    else
-        glPointSize(5);
-
-    glBegin(GL_POINTS);
-    for(auto cell:boundary_cells_)
-        utility::gl_vertex3f(cell->get_center(), 0.4);
     glEnd();
 
+//    glPointSize(4);
+//    glBegin(GL_POINTS);
+//    for(auto cell:boundary_cells_)
+//        utility::gl_vertex3f(cell->get_center(), 0.4);
+//    glEnd();
 
-//    glColor3f(0,1,0);
-//    glLineWidth(2);
-//    glBegin(GL_LINES);
-//    for(size_t i=0; i+1<coverage_path_.size();i++)
+
+//    if(is_valid())
 //    {
-//        utility::gl_vertex3f(coverage_path_[i]);
-//        utility::gl_vertex3f(coverage_path_[i+1]);
-//        //glColor3f(1,0,0);
+//        glColor3f(0,1,0);
+//        glLineWidth(1);
+//        glBegin(GL_LINES);
+//        for(size_t i=0; i+1<coverage_path_.size();i++)
+//        {
+//            utility::gl_vertex3f(coverage_path_[i]);
+//            utility::gl_vertex3f(coverage_path_[i+1]);
+//            //glColor3f(1,0,0);
+//        }
+//        glEnd();
 //    }
+
+//    glPointSize(6);
+//    glBegin(GL_POINTS);
+
+//    dc=1;
+//    if(!convexhull_.empty())
+//        dc = 1.0/convexhull_.size();
+//    i=1.0;
+
+//    for(auto it=begin_convexhull(); it!= end_convexhull(); it++)
+//    {
+//        glColor3f(i*dc, 1,0);
+//        utility::gl_vertex3f(*it, 0.3);
+//        i+=1.0;
+//    }
+
 //    glEnd();
 }
 
