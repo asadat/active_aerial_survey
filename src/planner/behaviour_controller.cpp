@@ -27,15 +27,19 @@ void behaviour_controller::start_sensing(bool override_min_travel_dist, const wa
         if(override_min_travel_dist || utility::distance_squared(last_sensing_pos_,mav_.get_position()) >
                 active_survey_param::min_footprint*5*active_survey_param::min_footprint*5)
         {
+            //ROS_INFO("calling sensing ...");
             update_available_flight_time(false);
             last_sensing_pos_ = mav_.get_position();
             mav_.sensor_.sense(mav_.get_position(),
                                [this, override_min_travel_dist, &reached_waypoint](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p)
             {
+                //ROS_INFO("callback sensing ...");
                 this->behaviour_planner_->sensing_callback(covered_cells, p,
                                                            /*override_min_travel_dist && behaviour_planner_->get_waypoint_count()==1*/
                                                            reached_waypoint);
             });
+
+            //ROS_INFO("returning from sensing ...");
         }
     }
     else

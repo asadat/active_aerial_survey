@@ -105,6 +105,12 @@ void active_survey::update()
     if(dt_mav > 0.001)
     {
         last_time_mav = cur_time;
+
+        // if planning took too long stop
+        // the timer
+        if(dt_mav > 0.1)
+            dt_mav = 0.1;
+
         mav_->update(dt_mav);
     }
 

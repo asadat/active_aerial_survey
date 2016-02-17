@@ -47,14 +47,14 @@ private:
     void update_segments(const cell_iterator &begin_it, const cell_iterator &end_it);
 
     template<typename cell_iterator>
-    void update_grid_gp(const cell_iterator &begin_it, const cell_iterator &end_it);
+    void update_grid_gp(const cell_iterator &begin_it, const cell_iterator &end_it, bool covered_cells);
 
     void plan_sensing_tour(std::vector<grid_segment::ptr> &segments, const Vector3f &pos,
                            const double &available_flight_time, const waypoint::ptr &cur_waypoint ,
                            const waypoint::ptr &reached_waypoint, plan & cur_plan);
 
     bool construct_coverage_plan(grid_segment::ptr segment, const Vector3f &pos,
-                                 const double &available_flight_time, const waypoint::ptr &cur_waypoint ,
+                                 const double &available_flight_time,
                                  plan & cur_plan, plan& coverage_plan);
     mav &mav_;
     plan plan_;

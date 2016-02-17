@@ -33,7 +33,13 @@ void mav::sense()
 void mav::update(const double &dt)
 {
     if(!stop_)
+    {
+        auto t0 = ros::Time::now();
         behaviour_controller_->update(dt);
+        auto dt_p = (ros::Time::now()-t0).toSec();
+        if(dt_p > 0.5)
+            ROS_WARN("mav update time: %.2f", dt_p);
+    }
 }
 
 void mav::update_state(const double &dt)

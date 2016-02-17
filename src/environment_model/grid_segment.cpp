@@ -239,49 +239,51 @@ void grid_segment::find_approximate_polygon()
         }
     }
 
-    std::vector<grid_cell::ptr> simplified_approx_polygon;
-    simplified_approx_polygon.push_back(approximate_poly_cells_.front());
+    //ROS_INFO("approx polygon for segment 1 ...");
 
-    for(auto it = approximate_poly_cells_.begin(); it!= approximate_poly_cells_.end();)
-    {
-        const double mean_dist_threshold = active_survey_param::min_footprint*0.5;
-        for(auto it_end = it+1; it_end != approximate_poly_cells_.end(); it_end++)
-        {
-            auto it_next = it_end+1;
-            if(it_next == approximate_poly_cells_.end())
-            {
-                simplified_approx_polygon.push_back(*it_end);
-                it = it_next;
-                break;
-            }
-            else
-            {
-                double mean_dist = 0;
-                double sz = 0;
-                for(auto it_tmp=it+1; it_tmp!=it_next; it_tmp++)
-                {
-                    sz+=1;
-                    mean_dist += utility::point_to_line_distance((*it)->get_center(), (*it_next)->get_center(), (*it_tmp)->get_center());
-                }
+//    std::vector<grid_cell::ptr> simplified_approx_polygon;
+//    simplified_approx_polygon.push_back(approximate_poly_cells_.front());
 
-                if(sz < 1.0)
-                    sz = 1.0;
+//    for(auto it = approximate_poly_cells_.begin(); it!= approximate_poly_cells_.end();)
+//    {
+//        const double mean_dist_threshold = active_survey_param::min_footprint*0.5;
+//        for(auto it_end = it+1; it_end != approximate_poly_cells_.end(); it_end++)
+//        {
+//            auto it_next = it_end+1;
+//            if(it_next == approximate_poly_cells_.end())
+//            {
+//                simplified_approx_polygon.push_back(*it_end);
+//                it = it_next;
+//                break;
+//            }
+//            else
+//            {
+//                double mean_dist = 0;
+//                double sz = 0;
+//                for(auto it_tmp=it+1; it_tmp!=it_next; it_tmp++)
+//                {
+//                    sz+=1;
+//                    mean_dist += utility::point_to_line_distance((*it)->get_center(), (*it_next)->get_center(), (*it_tmp)->get_center());
+//                }
 
-                mean_dist /= sz;
+//                if(sz < 1.0)
+//                    sz = 1.0;
 
-                if(mean_dist > mean_dist_threshold)
-                {
-                    //ROS_INFO("************ mean_dist: %f", mean_dist);
-                    it = it_end;
-                    simplified_approx_polygon.push_back(*it_end);
-                    break;
-                }
-            }
-        }
-    }
+//                mean_dist /= sz;
 
-    approximate_poly_cells_.clear();
-    copy(simplified_approx_polygon.begin(), simplified_approx_polygon.end(), back_inserter(approximate_poly_cells_));
+//                if(mean_dist > mean_dist_threshold)
+//                {
+//                    //ROS_INFO("************ mean_dist: %f", mean_dist);
+//                    it = it_end;
+//                    simplified_approx_polygon.push_back(*it_end);
+//                    break;
+//                }
+//            }
+//        }
+//    }
+
+//    approximate_poly_cells_.clear();
+//    copy(simplified_approx_polygon.begin(), simplified_approx_polygon.end(), back_inserter(approximate_poly_cells_));
 
     approximate_polygon_.clear();
     for(auto it=approximate_poly_cells_.begin(); it !=approximate_poly_cells_.end(); it++)
