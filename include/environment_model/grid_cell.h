@@ -107,6 +107,7 @@ public:
     inline rect get_rect() const { return rect(center_[0]-0.5*size_[0], center_[1]-0.5*size_[1],
                 center_[0]+0.5*size_[0], center_[1]+0.5*size_[1]);}
 
+    bool is_uncertain() const;
     bool is_target() const;
     double get_area() const {return size_[0]*size_[1];}
 

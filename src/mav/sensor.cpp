@@ -41,6 +41,13 @@ grid_cell::ptr sensor::sense_cell(const Vector2f &p)
         std::normal_distribution<> dist(cell->get_ground_truth_value(), active_survey_param::gp_sigma);
         gaussian_field::instance()->add_pattern(x, dist(e2));
     }
+    else
+    {
+        double x[] = {p[0],p[1]};
+        std::normal_distribution<> dist(0, active_survey_param::gp_sigma);
+        gaussian_field::instance()->add_pattern(x, dist(e2));
+    }
+
     return cell;
 }
 

@@ -30,7 +30,7 @@ public:
         double area_height = fabs(poly.front()[1] - poly.back()[1]);
         double area_width = fabs(poly.front()[0] - poly[1][0]);
 
-        int lanes_count = area_width/footprint[0];
+        int lanes_count = ceil(area_width/footprint[0]);
         ROS_INFO("coverage trajectory planner: #lm_lanes:%d area_width:%f footprint_width:%f", lanes_count, area_width, footprint[0]);
 
         Vector3f ll(poly.front()[0]+0.5*footprint[0], poly.front()[1]+0.5*footprint[1], altitude);

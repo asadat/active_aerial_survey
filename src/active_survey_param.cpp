@@ -50,7 +50,8 @@ double active_survey_param::coarse_coverage_height = 10.0;
 double active_survey_param::sensing_height = 2.0;
 
 int active_survey_param::non_ros::cell_drawing_mode = 0;
-
+double active_survey_param::non_ros::beta = 0.4;
+double active_survey_param::non_ros::target_threshold = 0.3;
 
 void active_survey_param::GetParams(ros::NodeHandle &nh)
 {

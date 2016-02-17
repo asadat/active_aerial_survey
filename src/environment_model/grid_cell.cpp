@@ -19,7 +19,7 @@ grid_cell::~grid_cell(){}
 
 void grid_cell::draw()
 {
-    static const double df_iso =0.05;
+    static const double df_iso =0.1;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glLineWidth(1.0);
     if(active_survey_param::non_ros::cell_drawing_mode == 0)
@@ -36,14 +36,12 @@ void grid_cell::draw()
                   2*variance_);
     else if(active_survey_param::non_ros::cell_drawing_mode == 4)
     {
-        double beta = 0.9;
-        double thr = 0.3;
-        bool l = (estimated_value_+ beta*variance_ < thr);
-        bool h = (estimated_value_- beta*variance_ > thr);
+        bool l = (estimated_value_+ active_survey_param::non_ros::beta*variance_
+                  < active_survey_param::non_ros::target_threshold);
+        bool h = (estimated_value_- active_survey_param::non_ros::beta*variance_
+                  > active_survey_param::non_ros::target_threshold);
         bool u = !(l||h);
-        glColor3f(l?1:0,
-                  h?1:0,
-                  u?1:0);
+        glColor3f(l?1:0, h?1:0, u?1:0);
         //glColor4f(estimated_value_+ variance_, estimated_value_+ variance_,
         //          estimated_value_+ variance_,1);
     }
@@ -66,7 +64,7 @@ void grid_cell::draw()
     utility::draw_quad(get_rect());
     glEnd();
 
-    if(ground_truth_value_ >0.3)
+    if(ground_truth_value_ > active_survey_param::non_ros::target_threshold)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glColor3f(0.1,1,0.1);
@@ -78,7 +76,16 @@ void grid_cell::draw()
 
 bool grid_cell::is_target() const
 {
-    return estimated_value_ > 0.3;
+    return estimated_value_ > active_survey_param::non_ros::target_threshold;
+}
+
+bool grid_cell::is_uncertain() const
+{
+    bool l = (estimated_value_+ active_survey_param::non_ros::beta*variance_
+              < active_survey_param::non_ros::target_threshold);
+    bool h = (estimated_value_- active_survey_param::non_ros::beta*variance_
+              > active_survey_param::non_ros::target_threshold);
+    return !(l||h);
 }
 
 bool grid_cell::is_inside(const rect &r) const

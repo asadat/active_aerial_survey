@@ -53,8 +53,8 @@ public:
         //for(int i=0; i<4*iterations_count; i++)
         while(target_cell_count < desired_target_cell_count)
         {
-            if(!growing_regions.empty())
-                ROS_INFO("desired: %ld current: %ld growing: %ld", desired_target_cell_count, target_cell_count, growing_regions.size());
+//            if(!growing_regions.empty())
+//                ROS_INFO("desired: %ld current: %ld growing: %ld", desired_target_cell_count, target_cell_count, growing_regions.size());
 
             cellular_automata_step(environment, growing_regions, target_cell_count, desired_target_cell_count);
         }

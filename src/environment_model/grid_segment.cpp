@@ -19,7 +19,15 @@ grid_segment::grid_segment(grid &grd, grid_cell::ptr seed_cell, grid_cell_base::
 }
 
 grid_segment::~grid_segment()
-{}
+{
+}
+
+void grid_segment::reset_cell(grid_cell::ptr cell)
+{
+    cell->set_label(0);
+    cell->set_approx_label(0);
+    reset_visited(cell);
+}
 
 void grid_segment::clear()
 {
@@ -29,6 +37,7 @@ void grid_segment::clear()
     approximate_polygon_.clear();
     convexhull_.clear();
     coverage_path_.clear();
+    uncertain_boundary_.clear();
 }
 
 void grid_segment::grow(std::function<grid_segment::ptr(grid_cell_base::label)> segments_accessor)
@@ -187,6 +196,7 @@ void grid_segment::find_approximate_polygon()
 
     boundary_cells_.clear();
     copy(nds.begin(), nds.end(), back_inserter(boundary_cells_));
+    get_uncertain_neighbour_cells(back_inserter(uncertain_boundary_));
 
     auto minit = std::min_element(nds.begin(), nds.end(), [](grid_cell::ptr x, grid_cell::ptr y)-> bool
     {
@@ -224,7 +234,7 @@ void grid_segment::find_approximate_polygon()
 
         if(i>=8 && !nds.empty())
         {
-            ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %u c: %.2f %.2f %.2f", get_label(), get_color()[0], get_color()[1], get_color()[2]);
+            //ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %u c: %.2f %.2f %.2f", get_label(), get_color()[0], get_color()[1], get_color()[2]);
             break;
         }
     }
@@ -280,12 +290,12 @@ void grid_segment::find_approximate_polygon()
 
 void grid_segment::find_convexhull()
 {
-    ROS_INFO("Convexhull l: %u #approx: %ld", get_label(), approximate_polygon_.size());
+    //ROS_INFO("Convexhull l: %u #approx: %ld", get_label(), approximate_polygon_.size());
 
     convexhull_.clear();
     if(approximate_polygon_.size()<3)
     {
-        ROS_ERROR("CH l: %u approx_poly.size() < 3", get_label());
+        //ROS_ERROR("CH l: %u approx_poly.size() < 3", get_label());
         return;
     }
 
@@ -331,7 +341,7 @@ void grid_segment::find_convexhull()
 
     if(is_line_)
     {
-        ROS_INFO("Convex hull detected line.");
+        //ROS_INFO("Convex hull detected line.");
         convexhull_.clear();
         std::copy(approximate_polygon_.begin(), approximate_polygon_.end(), std::back_inserter(convexhull_));
     }
@@ -365,7 +375,7 @@ void grid_segment::find_convexhull()
             if(next != approximate_polygon.end())
             {
 
-                ROS_INFO("CH angle: %.2f %f %f %f %f %f %f", utility::angle(p1, p2, *next), p1[0], p1[1], p2[0], p2[1], (*next)[0], (*next)[1]);
+                //ROS_INFO("CH angle: %.2f %f %f %f %f %f %f", utility::angle(p1, p2, *next), p1[0], p1[1], p2[0], p2[1], (*next)[0], (*next)[1]);
             }
             else
                 ROS_INFO("CH angle: No min");
@@ -388,12 +398,12 @@ void grid_segment::find_convexhull()
             }
         }
 
-        ROS_INFO("Convexhull l: %u #before_simplification: %ld", get_label(), convexhull_.size());
+        //ROS_INFO("Convexhull l: %u #before_simplification: %ld", get_label(), convexhull_.size());
         if(convexhull_.size() == 2)
         {
-            ROS_WARN("P1: %.1f %.1f P2: %.1f %.1f",
-                     convexhull_[0][0], convexhull_[0][1],
-                     convexhull_[1][0], convexhull_[1][1]);
+//            ROS_WARN("P1: %.1f %.1f P2: %.1f %.1f",
+//                     convexhull_[0][0], convexhull_[0][1],
+//                     convexhull_[1][0], convexhull_[1][1]);
         }
         else
         {
@@ -426,7 +436,7 @@ void grid_segment::find_convexhull()
     }
 
     //std::reverse(convexhull_.begin(), convexhull_.end());
-    ROS_INFO("Convexhull l: %u #ch: %ld", get_label(), convexhull_.size());
+    //ROS_INFO("Convexhull l: %u #ch: %ld", get_label(), convexhull_.size());
 }
 
 bool grid_segment::find_base_edge(size_t &first_index, size_t &second_index, double &convexhull_height) const
@@ -664,6 +674,34 @@ void grid_segment::set_ignored()
         (*it)->set_ignored(true);
 }
 
+template<class OutIterator>
+void grid_segment::get_uncertain_neighbour_cells(OutIterator out_iterator)
+{
+    std::set<grid_cell::ptr> uncertain_cells;
+    for(auto &bn: boundary_cells_)
+    {
+        for(size_t i=0; i<4; i++)
+        {
+            auto nc = grid_.get_neighbour_cell_4(bn, i);
+            if(nc)
+            {
+                if(nc->is_uncertain())
+                {
+                    uncertain_cells.insert(nc);
+                }
+            }
+        }
+    }
+
+    copy(uncertain_cells.begin(), uncertain_cells.end(), out_iterator);
+}
+
+double grid_segment::get_uncertain_neighbour_area() const
+{
+    auto s = grid_.get_cell_size();
+    return uncertain_boundary_.size() * s[0] * s[1];
+}
+
 void grid_segment::draw()
 {
     glLineWidth(3);
@@ -685,12 +723,18 @@ void grid_segment::draw()
 
     glEnd();
 
-//    glPointSize(4);
-//    glBegin(GL_POINTS);
-//    for(auto cell:boundary_cells_)
-//        utility::gl_vertex3f(cell->get_center(), 0.4);
-//    glEnd();
+    glPointSize(4);
+    glBegin(GL_POINTS);
+    for(auto cell:boundary_cells_)
+        utility::gl_vertex3f(cell->get_center(), 0.4);
+    glEnd();
 
+    glColor4f(1, 1,1, 0.8);
+    glPointSize(10);
+    glBegin(GL_POINTS);
+    for(auto cell:uncertain_boundary_)
+        utility::gl_vertex3f(cell->get_center(), 0.4);
+    glEnd();
 
 //    if(is_valid())
 //    {

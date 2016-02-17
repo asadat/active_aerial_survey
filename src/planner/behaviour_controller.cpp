@@ -30,9 +30,9 @@ void behaviour_controller::start_sensing(bool override_min_travel_dist)
             update_available_flight_time(false);
             last_sensing_pos_ = mav_.get_position();
             mav_.sensor_.sense(mav_.get_position(),
-                               [this](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p)
+                               [this, override_min_travel_dist](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p)
             {
-                this->behaviour_planner_->sensing_callback(covered_cells, p);
+                this->behaviour_planner_->sensing_callback(covered_cells, p, override_min_travel_dist && behaviour_planner_->get_waypoint_count()==1);
             });
         }
     }
@@ -155,9 +155,10 @@ void behaviour_controller::update(const double &dt)
                 {
                 case waypoint::action::START_SENSING:
                     sensing_ = true;
+                    start_sensing(true);
                     break;
                 case waypoint::action::STOP_SENSING:
-                    //start_sensing(true);
+                    start_sensing(true);
                     sensing_ = false;
                     break;
                 case waypoint::action::NONE:

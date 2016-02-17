@@ -70,6 +70,8 @@ public:
     {
     public:
         static int cell_drawing_mode;
+        static double beta;
+        static double target_threshold;
     };
 
 };

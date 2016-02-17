@@ -46,6 +46,7 @@ public:
 
     static inline bool is_visited(grid_cell::ptr &cell){return cell->flags_&1;}
     static inline void set_visited(grid_cell::ptr &cell){cell->flags_ |= 1;}
+    static inline void reset_visited(grid_cell::ptr &cell){cell->flags_ &= 0;}
 
     virtual Vector2f get_position(){return (*begin())->get_center();}
 
@@ -54,6 +55,7 @@ public:
     static void merge_with_segment(ptr u, ptr merging_segment, graph::ptr &component);
 
     void clear();
+    static void reset_cell(grid_cell::ptr cell);
 
     size_t get_cell_count() const {return cells_.size();}
     size_t get_convexhull_vertices_count() const {return  convexhull_.size();}
@@ -77,6 +79,11 @@ public:
     inline bool is_selected() const {return is_selected_;}
 
     inline Vector3f get_color() const {return utility::get_altitude_color(get_label());}
+
+    template<class OutIterator>
+    void get_uncertain_neighbour_cells(OutIterator out_iterator);
+    double get_uncertain_neighbour_area() const;
+
 private:
     grid_segment()=delete;
     void remove_skinny_part(grid_cell::ptr cell);
@@ -87,6 +94,7 @@ private:
     grid &grid_;
     std::set<grid_cell::ptr> cells_;
     std::vector<grid_cell::ptr> boundary_cells_;
+    std::vector<grid_cell::ptr> uncertain_boundary_;
     std::vector<grid_cell::ptr> approximate_poly_cells_;
 
     double coverage_path_cost_;

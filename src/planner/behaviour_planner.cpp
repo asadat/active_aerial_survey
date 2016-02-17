@@ -40,8 +40,16 @@ void behaviour_planner::generate_coarse_survey()
     polygon area_poly;
     mav_.environment_model_.get_environment_polygon(area_poly);
 
+    Vector2f padding_vec(10*active_survey_param::min_footprint, 10*active_survey_param::min_footprint);
+    area_poly[0] -= padding_vec;
+    area_poly[2] += padding_vec;
+
+    padding_vec[0] *=-1;
+    area_poly[1] -= padding_vec;
+    area_poly[3] += padding_vec;
+
     trajectory_planner::trajectory t;
-    trajectory_planner::plan_coverage_rectangle(area_poly, t, {40.0, 40.0}, 20.0);
+    trajectory_planner::plan_coverage_rectangle(area_poly, t, {40.0, 40.0}, 20.0);    
 
     for(auto &tp: t)
     {
@@ -93,31 +101,39 @@ void behaviour_planner::update_grid_gp(const cell_iterator &begin_it, const cell
 }
 
 
-void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells, const Vector3f &sensing_position)
+void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells, const Vector3f &sensing_position, bool reached_last_coarse_survey_waypoint)
 {
     last_sensing_position_ = sensing_position;
 
     for(auto cell:covered_cells)
         covered_cells_.insert(cell);
 
-   ROS_INFO("#unprocessed cells: %ld", covered_cells_.size());
+    size_t planning_threshold = mav_.get_grid().cells_count()*active_survey_param::exploitation_rate;
 
-    if(covered_cells_.size() > mav_.get_grid().cells_count()*active_survey_param::exploitation_rate)
+    static size_t period_count = 0;
+    size_t cur_count = floor(covered_cells_.size()/planning_threshold);
+
+    if(period_count > cur_count)
+        period_count = cur_count;
+
+    if(period_count < cur_count || reached_last_coarse_survey_waypoint)
     {
-        if(active_survey_param::speed < 100)
-            update_grid_gp(mav_.get_grid().begin(), mav_.get_grid().end());
-
-
-        //update_grid_gp();
-        //update_segments();
+        period_count++;
+        //if(active_survey_param::speed < 100)
+        update_grid_gp(mav_.get_grid().begin(), mav_.get_grid().end());
 
         if(active_survey_param::policy == "greedy")
             greedy();
-        else if(active_survey_param::policy == "delayed_greedy")
-            semi_greedy();
+        else if(active_survey_param::policy == "semi_greedy")
+            semi_greedy(reached_last_coarse_survey_waypoint);
         else
             two_stage();
-    }
+
+        mav_.stop();
+    }    
+
+    //mav_.stop();
+
 }
 
 
@@ -231,6 +247,14 @@ void behaviour_planner::draw()
     }
 
     components_mutex_.unlock();
+
+    glColor4f(1,1,1, 0.8);
+    glPointSize(10);
+    glBegin(GL_POINTS);
+    for(auto cell:uncertain_cells_)
+        utility::gl_vertex3f(cell->get_center(), 0.4);
+    glEnd();
+
 }
 
 void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segments, const Vector3f &pos,
@@ -279,7 +303,7 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
 
             //auto color = seg->get_color();
 
-            ROS_INFO("val: %.1f r_cost: %.1f fac_v: %.1f l: %u", value, reaching_cost, fac, seg->get_label());
+            //ROS_INFO("val: %.1f r_cost: %.1f fac_v: %.1f l: %u", value, reaching_cost, fac, seg->get_label());
 
             if(max_fac < fac)
             {
@@ -291,8 +315,8 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
 
         if(max_fac_seg)
         {
-            ROS_INFO("selected seg: %.1f reaching cost: %.1f label %d",
-                     max_fac_seg->get_segment_value(), max_fac_seg->get_reaching_cost(switching_pos), max_fac_seg->get_label());
+            //ROS_INFO("selected seg: %.1f reaching cost: %.1f label %d",
+            //         max_fac_seg->get_segment_value(), max_fac_seg->get_reaching_cost(switching_pos), max_fac_seg->get_label());
 
             size_t before_coverage_size = coverage_plan.size();
             flag = construct_coverage_plan(max_fac_seg, switching_pos, available_flight_time, cur_waypoint, cur_plan, coverage_plan);
@@ -304,7 +328,7 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
         }
         else
         {
-            ROS_INFO("No segment is selected");
+           // ROS_INFO("No segment is selected");
             flag = false;
         }
 
@@ -386,8 +410,8 @@ void behaviour_planner::greedy()
             segments.push_back(seg);
         else
         {
-            ROS_INFO("invalid segment exists: l: %u value: %.1f coverage_path_size: %ld", seg->get_label(),
-                     seg->get_segment_value(), seg->get_coverage_path_waypoint_count());
+//            ROS_INFO("invalid segment exists: l: %u value: %.1f coverage_path_size: %ld", seg->get_label(),
+//                     seg->get_segment_value(), seg->get_coverage_path_waypoint_count());
         }
     }
 
@@ -399,15 +423,62 @@ void behaviour_planner::greedy()
         seg->set_ignored();
 
     components_mutex_.lock();
-    segments.clear();
-    components_.clear();
     graph_->clear();
+    components_.clear();
+    segments.clear();
     components_mutex_.unlock();
 }
 
-void behaviour_planner::semi_greedy()
+void behaviour_planner::semi_greedy(bool reached_last_coarse_survey_waypoint)
 {
 
+    update_grid_gp(covered_cells_.begin(), covered_cells_.end());
+    update_segments(covered_cells_.begin(), covered_cells_.end());
+
+    uncertain_cells_.clear();
+    double uncertain_area=0;
+    for(auto &sp: segments_)
+    {
+        auto &seg = sp.second;
+        uncertain_area += seg->get_uncertain_neighbour_area();
+        seg->get_uncertain_neighbour_cells(std::back_inserter(uncertain_cells_));
+    }
+
+    ROS_INFO("uncertain area: %.1f", uncertain_area);
+
+    if(uncertain_area > 300 && !reached_last_coarse_survey_waypoint)
+    {
+        for(auto &cell:covered_cells_)
+            grid_segment::reset_cell(cell);
+
+        ROS_INFO("delay planning ...");
+    }
+    else
+    {
+        covered_cells_.clear();
+        std::vector<grid_segment::ptr> segments;
+        for(auto &sp: segments_)
+        {
+            auto seg = sp.second;
+            seg->plan_coverage_path(2*active_survey_param::sensing_height,
+                                    active_survey_param::sensing_height);
+
+            if(seg->is_valid() && !seg->get_ignored())
+                segments.push_back(seg);
+        }
+
+
+        plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, plan_);
+
+        for(auto seg:segments_)
+            seg.second->set_ignored();
+    }
+
+    components_mutex_.lock();
+    graph_->clear();
+    components_.clear();
+    segments_.clear();
+    components_mutex_.unlock();
 }
 
 void behaviour_planner::two_stage()
