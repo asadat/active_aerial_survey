@@ -69,11 +69,14 @@ void behaviour_planner::generate_coarse_survey()
 
     //stop sensing after the last waypoint
     plan_.back()->set_action(waypoint::action::STOP_SENSING);
+    plan_.back()->set_flag(waypoint::flag::LAST_COARSE_WAYPOINT);
 
     //insert home waypoint
     auto home_wp = std::make_shared<waypoint>(mav_.get_position());
     home_wp->set_action(waypoint::action::NONE);
+    home_wp->set_flag(waypoint::flag::HOME_WAYPOINT);
     plan_.push_back(home_wp);
+
 
 }
 
@@ -101,7 +104,8 @@ void behaviour_planner::update_grid_gp(const cell_iterator &begin_it, const cell
 }
 
 
-void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells, const Vector3f &sensing_position, bool reached_last_coarse_survey_waypoint)
+void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells, const Vector3f &sensing_position,
+                                         const waypoint::ptr &reached_waypoint)
 {
     last_sensing_position_ = sensing_position;
 
@@ -116,24 +120,22 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
     if(period_count > cur_count)
         period_count = cur_count;
 
-    if(period_count < cur_count || reached_last_coarse_survey_waypoint)
+    bool last_survey_wp = (reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false);
+
+    if(period_count < cur_count || last_survey_wp)
     {
         period_count++;
-        //if(active_survey_param::speed < 100)
         update_grid_gp(mav_.get_grid().begin(), mav_.get_grid().end());
 
         if(active_survey_param::policy == "greedy")
-            greedy();
+            greedy(reached_waypoint);
         else if(active_survey_param::policy == "semi_greedy")
-            semi_greedy(reached_last_coarse_survey_waypoint);
+            semi_greedy(reached_waypoint);
         else
-            two_stage();
+            two_stage(reached_waypoint);
 
         mav_.stop();
     }    
-
-    //mav_.stop();
-
 }
 
 
@@ -259,24 +261,31 @@ void behaviour_planner::draw()
 
 void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segments, const Vector3f &pos,
                                           const double &available_flight_time, const waypoint::ptr &cur_waypoint,
-                                          plan &cur_plan)
+                                          const waypoint::ptr &reached_waypoint, plan &cur_plan)
 {
     if(segments.empty())
         return;
 
     bool flag = true;
 
-    cur_plan.push_front(cur_waypoint);
+    bool pushed_cur_waypoint = false;
+    if(cur_waypoint != reached_waypoint)
+    {
+        cur_plan.push_front(cur_waypoint);
+        pushed_cur_waypoint = true;
+    }
 
     waypoint::ptr curpos_waypoint = std::make_shared<waypoint>(pos);
     curpos_waypoint->set_action(waypoint::action::START_SENSING);
     cur_plan.push_front(curpos_waypoint);
 
+    bool reached_last_coarse_wp = reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false;
+
     //move curpos_waypoint a little forward
     auto fp = mav_.sensor_.get_rect(pos);
     double step_forward = 0.5*std::min(fabs(fp[0]-fp[2]),fabs(fp[1]-fp[3]));
     bool has_curpos_wp = true;
-    if(utility::distance_squared(pos, cur_waypoint->get_position()) > step_forward*step_forward)
+    if(!reached_last_coarse_wp && utility::distance_squared(pos, cur_waypoint->get_position()) > step_forward*step_forward)
         curpos_waypoint->set_position(pos+step_forward*(cur_waypoint->get_position()-pos).normalized());
     else
     {
@@ -338,8 +347,10 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
 
     if(coverage_plan.empty())
     {
-        cur_plan.pop_next_waypoint();
         if(has_curpos_wp)
+            cur_plan.pop_next_waypoint();
+
+        if(pushed_cur_waypoint)
             cur_plan.pop_next_waypoint();
     }
     else
@@ -393,7 +404,7 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
     return seg_coverage_path.empty();
 }
 
-void behaviour_planner::greedy()
+void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
 {
     update_grid_gp(covered_cells_.begin(), covered_cells_.end());
     update_segments(covered_cells_.begin(), covered_cells_.end());
@@ -415,8 +426,9 @@ void behaviour_planner::greedy()
         }
     }
 
+
     //ROS_INFO(" before planning .....");
-    plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, plan_);
+    plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, reached_waypoint, plan_);
     //ROS_INFO(" after planning ......");
 
     for(auto seg:segments)
@@ -429,7 +441,7 @@ void behaviour_planner::greedy()
     components_mutex_.unlock();
 }
 
-void behaviour_planner::semi_greedy(bool reached_last_coarse_survey_waypoint)
+void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
 {
 
     update_grid_gp(covered_cells_.begin(), covered_cells_.end());
@@ -445,8 +457,9 @@ void behaviour_planner::semi_greedy(bool reached_last_coarse_survey_waypoint)
     }
 
     ROS_INFO("uncertain area: %.1f", uncertain_area);
+    bool last_survey_wp = (reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false);
 
-    if(uncertain_area > 300 && !reached_last_coarse_survey_waypoint)
+    if(uncertain_area > 100 && !last_survey_wp)
     {
         for(auto &cell:covered_cells_)
             grid_segment::reset_cell(cell);
@@ -467,8 +480,7 @@ void behaviour_planner::semi_greedy(bool reached_last_coarse_survey_waypoint)
                 segments.push_back(seg);
         }
 
-
-        plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, plan_);
+        plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, reached_waypoint, plan_);
 
         for(auto seg:segments_)
             seg.second->set_ignored();
@@ -481,7 +493,7 @@ void behaviour_planner::semi_greedy(bool reached_last_coarse_survey_waypoint)
     components_mutex_.unlock();
 }
 
-void behaviour_planner::two_stage()
+void behaviour_planner::two_stage(const waypoint::ptr &reached_waypoint)
 {
 
 }

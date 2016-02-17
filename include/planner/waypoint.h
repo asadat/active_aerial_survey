@@ -14,6 +14,7 @@ public:
 
     enum class action {NONE=0, START_SENSING, STOP_SENSING, INTERRUPT_WAYPOINT};
     enum class type {COARSE=0, HIGH_RESOLUTION};
+    enum class flag : char {LAST_COARSE_WAYPOINT=1, HOME_WAYPOINT=2};
 
     typedef std::shared_ptr<waypoint> ptr;
     typedef std::function<void(ptr)> waypoint_call_back;
@@ -40,13 +41,20 @@ public:
     type get_type() const {return type_;}
     void set_type(const type &t){type_=t;}
 
+    bool get_flag(const flag &f) const;
+    void set_flag(const flag &f);
+    void unset_flag(const flag &f);
+
+    bool is_last_coarse_waypoint() const {return get_flag(flag::LAST_COARSE_WAYPOINT);}
+    bool is_home_waypoint() const {return get_flag(flag::HOME_WAYPOINT);}
+
 protected:
     Vector3f pos_;
     waypoint_call_back waypoint_call_back_;
     action action_;
     action on_set_action_;
-
     type type_;
+    char flags_;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

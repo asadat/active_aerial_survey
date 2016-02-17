@@ -19,7 +19,7 @@ behaviour_controller::~behaviour_controller()
 {
 }
 
-void behaviour_controller::start_sensing(bool override_min_travel_dist)
+void behaviour_controller::start_sensing(bool override_min_travel_dist, const waypoint::ptr &reached_waypoint)
 {
     if(sensing_)
     {
@@ -30,9 +30,11 @@ void behaviour_controller::start_sensing(bool override_min_travel_dist)
             update_available_flight_time(false);
             last_sensing_pos_ = mav_.get_position();
             mav_.sensor_.sense(mav_.get_position(),
-                               [this, override_min_travel_dist](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p)
+                               [this, override_min_travel_dist, &reached_waypoint](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p)
             {
-                this->behaviour_planner_->sensing_callback(covered_cells, p, override_min_travel_dist && behaviour_planner_->get_waypoint_count()==1);
+                this->behaviour_planner_->sensing_callback(covered_cells, p,
+                                                           /*override_min_travel_dist && behaviour_planner_->get_waypoint_count()==1*/
+                                                           reached_waypoint);
             });
         }
     }
@@ -142,7 +144,7 @@ void behaviour_controller::update(const double &dt)
         if(!mav_.at_goal())
         {
             mav_.update_state(dt);
-            start_sensing(false);
+            start_sensing(false, nullptr);
         }
         else
         {
@@ -155,10 +157,10 @@ void behaviour_controller::update(const double &dt)
                 {
                 case waypoint::action::START_SENSING:
                     sensing_ = true;
-                    start_sensing(true);
+                    start_sensing(true, waypoint_);
                     break;
                 case waypoint::action::STOP_SENSING:
-                    start_sensing(true);
+                    start_sensing(true, waypoint_);
                     sensing_ = false;
                     break;
                 case waypoint::action::NONE:

@@ -2,7 +2,7 @@ simulation: True
 visualization: True
 FOV: 1.57
 min_footprint: 2
-speed: 555
+speed: 55
 policy: semi_greedy
 area_width: 200.0
 area_height: 200.0
