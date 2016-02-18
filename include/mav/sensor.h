@@ -16,6 +16,7 @@ public:
     void sense(const Vector3f &p, std::function<void(std::set<grid_cell::ptr>&, const Vector3f&)> callback);
     void draw();
     rect get_rect(const Vector3f &p) const;
+    size2f get_footprint_size(const double &altitude) const;
 
 private:
     void perform_sense(Vector3f p, std::function<void(std::set<grid_cell::ptr>&, const Vector3f&)> callback);

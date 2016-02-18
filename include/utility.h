@@ -176,6 +176,28 @@ static void draw_quad(const rect &r, const double &z=0)
     glVertex3f(r[0],r[3], z);
 }
 
+static void draw_cross(const Vector2f & p, const double &z)
+{
+    double d = 5;
+    Vector2f ll(d,d);
+    utility::gl_vertex3f(p-ll, z);
+    utility::gl_vertex3f(p+ll, z);
+
+    ll[0] *=-1;
+    utility::gl_vertex3f(p-ll, z);
+    utility::gl_vertex3f(p+ll, z);
+}
+
+static void draw_circle(const Vector2f &c, const double &r, const double &z)
+{
+    double res=30.0;
+    for(int i=0; i<res; i++)
+    {
+        auto p = c + Vector2f(r*cos(i*3.14*2.0/res), r*sin(i*3.14*2.0/res));
+        utility::gl_vertex3f(p,z);
+    }
+}
+
 static Vector3f get_altitude_color(const double& h)
 {
     Vector3f c;

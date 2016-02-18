@@ -65,6 +65,7 @@ public:
     static double exploitation_rate;
     static double coarse_coverage_height;
     static double sensing_height;
+    static double uncertain_cells_threshold;
 
     class non_ros
     {

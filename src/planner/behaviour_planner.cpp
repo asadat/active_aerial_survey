@@ -40,7 +40,8 @@ void behaviour_planner::generate_coarse_survey()
     polygon area_poly;
     mav_.environment_model_.get_environment_polygon(area_poly);
 
-    Vector2f padding_vec(10*active_survey_param::min_footprint, 10*active_survey_param::min_footprint);
+    size2f coarse_fp = mav_.sensor_.get_footprint_size(active_survey_param::coarse_coverage_height);
+    Vector2f padding_vec(0.5*coarse_fp[0], 0.5*coarse_fp[1]);
     area_poly[0] -= padding_vec;
     area_poly[2] += padding_vec;
 
@@ -49,7 +50,9 @@ void behaviour_planner::generate_coarse_survey()
     area_poly[3] += padding_vec;
 
     trajectory_planner::trajectory t;
-    trajectory_planner::plan_coverage_rectangle(area_poly, t, {40.0, 40.0}, 20.0);    
+
+    trajectory_planner::plan_coverage_rectangle(area_poly, t, coarse_fp,
+                                                active_survey_param::coarse_coverage_height);
 
     for(auto &tp: t)
     {
@@ -459,6 +462,11 @@ void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
 
 void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
 {
+    components_mutex_.lock();
+    graph_->clear();
+    components_.clear();
+    segments_.clear();
+    components_mutex_.unlock();
 
     //update_grid_gp(covered_cells_.begin(), covered_cells_.end(), false);
     update_segments(covered_cells_.begin(), covered_cells_.end());
@@ -475,7 +483,7 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
     ROS_INFO("uncertain area: %.1f", uncertain_area);
     bool last_survey_wp = (reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false);
 
-    if(uncertain_area > 30 && !last_survey_wp)
+    if(uncertain_area > -1 && !last_survey_wp)
     {
 //        for(auto &sp: segments_)
 //        {
@@ -515,14 +523,29 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
             seg.second->set_ignored();
     }
 
-    components_mutex_.lock();
-    graph_->clear();
-    components_.clear();
-    segments_.clear();
-    components_mutex_.unlock();
+    const double dist = 2*active_survey_param::coarse_coverage_height;
+    for(auto &sp:segments_)
+    {
+        grid_segment::ptr seg = sp.second;
+        if(seg->is_uncertain() && seg->is_valid())
+        {
+            for(auto &sp_a:segments_)
+            {
+                grid_segment::ptr seg_a = sp_a.second;
+                if(!seg_a->is_uncertain() && seg_a->is_valid())
+                {
+                    if(utility::distance_squared(seg->get_sudo_center(), seg_a->get_sudo_center()) < dist*dist)
+                    {
+                        seg_a->set_dependent_sudo_center(seg->get_sudo_center());
+                        //seg_a->set_cross_color(seg->get_color());
+                    }
+                }
+            }
+
+        }
+    }
 
     mav_.stop();
-    //ROS_INFO("returning from semi-greedy...");
 }
 
 void behaviour_planner::two_stage(const waypoint::ptr &reached_waypoint)

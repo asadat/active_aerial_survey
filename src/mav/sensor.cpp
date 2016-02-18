@@ -113,6 +113,11 @@ rect sensor::get_rect(const Vector3f &p) const
     return {p[0]-l[0], p[1]-l[1], p[0]+l[0], p[1]+l[1]};
 }
 
+size2f sensor::get_footprint_size(const double &altitude) const
+{
+    return size2f(2*altitude*tan(0.5*active_survey_param::FOV), 2*altitude*tan(0.5*active_survey_param::FOV));
+}
+
 void sensor::draw()
 {
     gaussian_field::instance()->draw();

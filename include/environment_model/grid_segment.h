@@ -85,6 +85,11 @@ public:
 
     double get_uncertain_neighbour_area() const;
 
+    bool is_uncertain() const;
+    void set_cross_color(const Vector3f &c){cross_color_ = c;}
+    void set_dependent_sudo_center(const Vector2f &c){dependent_sudo_center_ = c;}
+    Vector2f get_sudo_center() const {return sudo_center_;}
+
 private:
     grid_segment()=delete;
     void remove_skinny_part(grid_cell::ptr cell);
@@ -104,8 +109,11 @@ private:
     double coverage_path_cost_;
     std::vector<Vector3f> coverage_path_;
     bool is_line_;
-
     bool is_selected_;
+    Vector2f sudo_center_;
+    Vector2f dependent_sudo_center_;
+
+    Vector3f cross_color_;
 
     polygon approximate_polygon_;
     polygon convexhull_;
