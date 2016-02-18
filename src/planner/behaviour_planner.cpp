@@ -127,7 +127,7 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
     if(period_count < cur_count || last_survey_wp)
     {
         period_count++;
-        //update_grid_gp(mav_.get_grid().begin(), mav_.get_grid().end(), true);
+        update_grid_gp(mav_.get_grid().begin(), mav_.get_grid().end(), true);
 
         if(active_survey_param::policy == "greedy")
             greedy(reached_waypoint);
@@ -135,8 +135,6 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
             semi_greedy(reached_waypoint);
         else
             two_stage(reached_waypoint);
-
-        //mav_.stop();
     }    
 }
 
@@ -147,7 +145,7 @@ void behaviour_planner::update_segments(const cell_iterator &begin_it, const cel
     for(auto cell_it=begin_it; cell_it!=end_it; ++cell_it)
     {
         auto cell = *cell_it;
-        if(cell->is_target() && !cell->has_label())
+        if(cell->is_target() && !cell->has_label() && !cell->is_ignored())
         {
             grid_segment::ptr gs = std::make_shared<grid_segment>(mav_.get_grid(), cell, grid_cell_base::generate_label());
 
@@ -264,7 +262,7 @@ void behaviour_planner::draw()
     components_mutex_.unlock();
 
     glColor4f(1,1,1, 0.8);
-    glPointSize(10);
+    glPointSize(6);
     glBegin(GL_POINTS);
     for(auto cell:uncertain_cells_)
         utility::gl_vertex3f(cell->get_center(), 0.4);
@@ -425,7 +423,7 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
 
 void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
 {
-    update_grid_gp(covered_cells_.begin(), covered_cells_.end(), false);
+   // update_grid_gp(covered_cells_.begin(), covered_cells_.end(), false);
     update_segments(covered_cells_.begin(), covered_cells_.end());
     covered_cells_.clear();
 
@@ -462,30 +460,27 @@ void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
 void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
 {
 
-    //ROS_INFO("updating grid cell ...");
-    update_grid_gp(covered_cells_.begin(), covered_cells_.end(), false);
-    //ROS_INFO("updating segments ...");
+    //update_grid_gp(covered_cells_.begin(), covered_cells_.end(), false);
     update_segments(covered_cells_.begin(), covered_cells_.end());
-    //ROS_INFO("updated segments ...");
 
     uncertain_cells_.clear();
     double uncertain_area=0;
     for(auto &sp: segments_)
     {
-        auto &seg = sp.second;
+        grid_segment::ptr seg = sp.second;
         uncertain_area += seg->get_uncertain_neighbour_area();
         seg->get_uncertain_neighbour_cells(std::back_inserter(uncertain_cells_));
     }
 
-    //ROS_INFO("uncertain area: %.1f", uncertain_area);
+    ROS_INFO("uncertain area: %.1f", uncertain_area);
     bool last_survey_wp = (reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false);
 
-    if(uncertain_area > 300 && !last_survey_wp)
+    if(uncertain_area > 30 && !last_survey_wp)
     {
-        for(auto &sp: segments_)
-        {
-            //ROS_INFO("resetting segment: %u", sp.second->get_label());
-        }
+//        for(auto &sp: segments_)
+//        {
+//            //ROS_INFO("resetting segment: %u", sp.second->get_label());
+//        }
 
         for(auto &cell:covered_cells_)
             grid_segment::reset_cell(cell);
@@ -505,6 +500,8 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
 
             if(seg->is_valid() && !seg->get_ignored())
                 segments.push_back(seg);
+            else
+                ROS_INFO("ignoring segment %u area: %ld", seg->get_label(), seg->get_cell_count());
         }
 
         plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, reached_waypoint, plan_);
@@ -524,6 +521,7 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
     segments_.clear();
     components_mutex_.unlock();
 
+    mav_.stop();
     //ROS_INFO("returning from semi-greedy...");
 }
 

@@ -82,6 +82,7 @@ public:
 
     template<class OutIterator>
     void get_uncertain_neighbour_cells(OutIterator out_iterator);
+
     double get_uncertain_neighbour_area() const;
 
 private:
@@ -90,6 +91,9 @@ private:
     int get_approximate_neighbours_count(grid_cell::ptr cell);
     void set_label(grid_cell_base::label l);
     bool find_base_edge(size_t &first_index, size_t &second_index, double &convexhull_height) const;
+
+    //template<class OutIterator>
+    //void find_uncertain_neighbour_cells(OutIterator out_iterator);
 
     grid &grid_;
     std::set<grid_cell::ptr> cells_;

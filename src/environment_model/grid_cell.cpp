@@ -42,6 +42,9 @@ void grid_cell::draw()
                   > active_survey_param::non_ros::target_threshold);
         bool u = !(l||h);
         glColor3f(l?1:0, h?1:0, u?1:0);
+
+//        if(is_ignored())
+//            glColor3f(0,0,0);
         //glColor4f(estimated_value_+ variance_, estimated_value_+ variance_,
         //          estimated_value_+ variance_,1);
     }

@@ -687,7 +687,7 @@ void grid_segment::get_uncertain_neighbour_cells(OutIterator out_iterator)
             auto nc = grid_.get_neighbour_cell_4(bn, i);
             if(nc)
             {
-                if(nc->is_uncertain())
+                if(nc->is_uncertain() && !nc->is_covered())
                 {
                     uncertain_cells.insert(nc);
                 }
@@ -697,6 +697,28 @@ void grid_segment::get_uncertain_neighbour_cells(OutIterator out_iterator)
 
     copy(uncertain_cells.begin(), uncertain_cells.end(), out_iterator);
 }
+
+//template<class OutIterator>
+//void grid_segment::find_uncertain_neighbour_cells(OutIterator out_iterator)
+//{
+//    std::set<grid_cell::ptr> uncertain_cells;
+//    for(auto &bn: boundary_cells_)
+//    {
+//        for(size_t i=0; i<4; i++)
+//        {
+//            auto nc = grid_.get_neighbour_cell_4(bn, i);
+//            if(nc)
+//            {
+//                if(nc->is_uncertain() && !nc->is_covered())
+//                {
+//                    uncertain_cells.insert(nc);
+//                }
+//            }
+//        }
+//    }
+
+//    copy(uncertain_cells.begin(), uncertain_cells.end(), out_iterator);
+//}
 
 double grid_segment::get_uncertain_neighbour_area() const
 {
