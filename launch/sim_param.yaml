@@ -22,4 +22,4 @@ exploitation_rate: 0.02
 coarse_coverage_height: 20.0
 sensing_height: 2.0
 average_speed: 1.0
-uncertain_cells_threshold: 10.0
+uncertain_cells_threshold: 1.0

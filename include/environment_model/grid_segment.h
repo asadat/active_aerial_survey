@@ -12,8 +12,6 @@
 namespace asn
 {
 
-//class graph;
-
 class grid_segment: public graph_node
 {
 public:
@@ -86,9 +84,11 @@ public:
     double get_uncertain_neighbour_area() const;
 
     bool is_uncertain() const;
-    void set_cross_color(const Vector3f &c){cross_color_ = c;}
-    void set_dependent_sudo_center(const Vector2f &c){dependent_sudo_center_ = c;}
-    Vector2f get_sudo_center() const {return sudo_center_;}
+    inline void set_cross_color(const Vector3f &c){cross_color_ = c;}
+    inline Vector2f get_sudo_center() const {return sudo_center_;}
+
+    inline void set_delayed_segment(const ptr ds){delayed_segment_=ds;}
+    inline ptr get_delayed_segment() const {return delayed_segment_;}
 
 private:
     grid_segment()=delete;
@@ -111,9 +111,10 @@ private:
     bool is_line_;
     bool is_selected_;
     Vector2f sudo_center_;
-    Vector2f dependent_sudo_center_;
 
     Vector3f cross_color_;
+
+    ptr delayed_segment_;
 
     polygon approximate_polygon_;
     polygon convexhull_;

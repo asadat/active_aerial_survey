@@ -98,7 +98,7 @@ template<typename cell_iterator>
 void behaviour_planner::update_grid_gp(const cell_iterator &begin_it, const cell_iterator &end_it, bool covered_cells)
 {
     for(auto it =begin_it; it!=end_it; ++it)
-    {
+    {        
         auto &cell = *it;
         double x[] = {cell->get_center()[0],cell->get_center()[1]};
         if(!covered_cells || cell->is_covered())
@@ -462,15 +462,18 @@ void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
 
 void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
 {
+    // delete the extracted segment left from
+    // the previous planning iteration
     components_mutex_.lock();
     graph_->clear();
     components_.clear();
     segments_.clear();
     components_mutex_.unlock();
 
-    //update_grid_gp(covered_cells_.begin(), covered_cells_.end(), false);
+    // extract the segments from the covered cells
     update_segments(covered_cells_.begin(), covered_cells_.end());
 
+    // find the uncertain cells of close to segments
     uncertain_cells_.clear();
     double uncertain_area=0;
     for(auto &sp: segments_)
@@ -478,49 +481,6 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
         grid_segment::ptr seg = sp.second;
         uncertain_area += seg->get_uncertain_neighbour_area();
         seg->get_uncertain_neighbour_cells(std::back_inserter(uncertain_cells_));
-    }
-
-    ROS_INFO("uncertain area: %.1f", uncertain_area);
-    bool last_survey_wp = (reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false);
-
-    if(uncertain_area > -1 && !last_survey_wp)
-    {
-//        for(auto &sp: segments_)
-//        {
-//            //ROS_INFO("resetting segment: %u", sp.second->get_label());
-//        }
-
-        for(auto &cell:covered_cells_)
-            grid_segment::reset_cell(cell);
-
-        //ROS_INFO("delay planning ...");
-    }
-    else
-    {
-        //ROS_INFO("planning ...");
-
-        std::vector<grid_segment::ptr> segments;
-        for(auto &sp: segments_)
-        {
-            auto seg = sp.second;
-            seg->plan_coverage_path(2*active_survey_param::sensing_height,
-                                    active_survey_param::sensing_height);
-
-            if(seg->is_valid() && !seg->get_ignored())
-                segments.push_back(seg);
-            else
-                ROS_INFO("ignoring segment %u area: %ld", seg->get_label(), seg->get_cell_count());
-        }
-
-        plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, reached_waypoint, plan_);
-
-        for(auto c:covered_cells_)
-            c->set_ignored(true);
-
-        covered_cells_.clear();
-
-        for(auto seg:segments_)
-            seg.second->set_ignored();
     }
 
     const double dist = 2*active_survey_param::coarse_coverage_height;
@@ -536,14 +496,98 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
                 {
                     if(utility::distance_squared(seg->get_sudo_center(), seg_a->get_sudo_center()) < dist*dist)
                     {
-                        seg_a->set_dependent_sudo_center(seg->get_sudo_center());
-                        //seg_a->set_cross_color(seg->get_color());
+                        seg_a->set_delayed_segment(seg);
                     }
                 }
             }
-
         }
     }
+
+    bool last_survey_wp = (reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false);
+
+    std::vector<grid_segment::ptr> segments;
+    for(auto &sp: segments_)
+    {
+        grid_segment::ptr seg = sp.second;
+
+        if(seg->is_valid() && !seg->get_ignored())
+        {
+            if((!seg->is_uncertain() && !seg->get_delayed_segment()) || last_survey_wp)
+            {
+                seg->plan_coverage_path(2*active_survey_param::sensing_height,
+                                        active_survey_param::sensing_height);
+
+                segments.push_back(seg);
+            }
+        }
+        else
+        {
+            //ROS_INFO("ignoring segment %u area: %ld", seg->get_label(), seg->get_cell_count());
+        }
+    }
+
+
+    plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, reached_waypoint, plan_);
+
+    for(auto seg:segments)
+    {
+        //ROS_INFO("setting ignored for segment %u area: %ld", seg->get_label(), seg->get_cell_count());
+        seg->set_ignored();
+    }
+
+    // remove the covered cells that are planned for
+    for(auto it=covered_cells_.begin(); it!=covered_cells_.end();)
+    {
+        if((*it)->is_ignored())
+        {
+            it = covered_cells_.erase(it);
+        }
+        else
+        {
+            grid_segment::reset_cell(*it);
+            ++it;
+        }
+    }
+
+
+    //std::remove_if(covered_cells_.begin(), covered_cells_.end(),[](const grid_cell::ptr &gs){return gs->is_ignored();});
+
+//    ROS_INFO("uncertain area: %.1f", uncertain_area);
+//    bool last_survey_wp = (reached_waypoint?reached_waypoint->is_last_coarse_waypoint():false);
+
+//    // unless we are at the end of survey or there are
+//    // some uncertain cells, perform the planning, otherwise delay it.
+//    if(uncertain_area > -1 && !last_survey_wp)
+//    {
+//        for(auto &cell:covered_cells_)
+//            grid_segment::reset_cell(cell);
+//    }
+//    else
+//    {
+//        std::vector<grid_segment::ptr> segments;
+//        for(auto &sp: segments_)
+//        {
+//            auto seg = sp.second;
+//            seg->plan_coverage_path(2*active_survey_param::sensing_height,
+//                                    active_survey_param::sensing_height);
+
+//            if(seg->is_valid() && !seg->get_ignored())
+//                segments.push_back(seg);
+//            else
+//                ROS_INFO("ignoring segment %u area: %ld", seg->get_label(), seg->get_cell_count());
+//        }
+
+//        plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, reached_waypoint, plan_);
+
+//        for(auto c:covered_cells_)
+//            c->set_ignored(true);
+
+//        covered_cells_.clear();
+
+//        for(auto seg:segments_)
+//            seg.second->set_ignored();
+//    }
+
 
     mav_.stop();
 }

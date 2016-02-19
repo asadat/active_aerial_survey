@@ -14,8 +14,8 @@ grid_segment::grid_segment(grid &grd, grid_cell::ptr seed_cell, grid_cell_base::
     grid_(grd),
     is_selected_(false),
     sudo_center_(0,0),
-    dependent_sudo_center_(0,0),
-    cross_color_(0.9, 0.8, 0.0)
+    cross_color_(0.9, 0.8, 0.0),
+    delayed_segment_(nullptr)
 {
     cells_.insert(seed_cell);
     seed_cell->set_label(label);
@@ -160,8 +160,6 @@ void grid_segment::find_approximate_polygon()
 
     if(!cells_.empty())
         sudo_center_ *= (1.0/cells_.size());
-
-    dependent_sudo_center_ = sudo_center_;
 
     // remove the parts with 1-cell width
     for(auto cell:cells_)
@@ -776,32 +774,37 @@ void grid_segment::draw()
         utility::gl_vertex3f(cell->get_center(), 0.4);
     glEnd();
 
-    utility::gl_color(cross_color_);
-    if(is_uncertain())
-        glLineWidth(8);
-    else
-        glLineWidth(3);
-
-    glBegin(GL_LINES);
-    utility::draw_cross(sudo_center_, 0.5);
-    glEnd();
-
-    glColor3f(0.5, 0.5,1);
-    glLineWidth(2);
-    glBegin(GL_LINES);
-    utility::gl_vertex3f(dependent_sudo_center_, 0.51);
-    utility::gl_vertex3f(sudo_center_, 0.51);
-    glEnd();
-
-
-    if(is_uncertain())
+    if(is_valid())
     {
         utility::gl_color(cross_color_);
-        glLineWidth(1);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBegin(GL_POLYGON);
-        utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
+        if(is_uncertain())
+            glLineWidth(8);
+        else
+            glLineWidth(3);
+
+        glBegin(GL_LINES);
+        utility::draw_cross(sudo_center_, 0.5);
         glEnd();
+
+        if(delayed_segment_)
+        {
+            glColor3f(0.5, 0.5,1);
+            glLineWidth(2);
+            glBegin(GL_LINES);
+            utility::gl_vertex3f(delayed_segment_->get_sudo_center(), 0.51);
+            utility::gl_vertex3f(sudo_center_, 0.51);
+            glEnd();
+        }
+
+        if(is_uncertain())
+        {
+            utility::gl_color(cross_color_);
+            glLineWidth(1);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glBegin(GL_POLYGON);
+            utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
+            glEnd();
+        }
     }
 
 //    if(is_valid())

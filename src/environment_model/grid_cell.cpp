@@ -75,6 +75,15 @@ void grid_cell::draw()
         utility::draw_quad(get_rect(), 0.1);
         glEnd();
     }
+
+    if(is_ignored())
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColor3f(0.1,0.1,1);
+        glBegin(GL_QUADS);
+        utility::draw_quad(get_rect(), 0.15);
+        glEnd();
+    }
 }
 
 bool grid_cell::is_target() const
