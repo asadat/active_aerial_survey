@@ -265,7 +265,7 @@ void behaviour_planner::draw()
     components_mutex_.unlock();
 
     glColor4f(1,1,1, 0.8);
-    glPointSize(6);
+    glPointSize(4);
     glBegin(GL_POINTS);
     for(auto cell:uncertain_cells_)
         utility::gl_vertex3f(cell->get_center(), 0.4);
@@ -538,8 +538,9 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
     // remove the covered cells that are planned for
     for(auto it=covered_cells_.begin(); it!=covered_cells_.end();)
     {
-        if((*it)->is_ignored())
+        if((*it)->is_ignored() || (!(*it)->is_uncertain() && !(*it)->is_target()))
         {
+            (*it)->set_ignored(true);
             it = covered_cells_.erase(it);
         }
         else

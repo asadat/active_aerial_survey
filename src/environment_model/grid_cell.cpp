@@ -78,8 +78,8 @@ void grid_cell::draw()
 
     if(is_ignored())
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glColor3f(0.1,0.1,1);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glColor4f(0.0,0.0,1, 0.2);
         glBegin(GL_QUADS);
         utility::draw_quad(get_rect(), 0.15);
         glEnd();

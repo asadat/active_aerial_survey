@@ -24,7 +24,7 @@ gaussian_field::~gaussian_field()
 void gaussian_field::draw()
 {    
     auto s = this->sampleset->size();
-    glPointSize(5);
+    glPointSize(2);
     glColor3f(1,0.5,0);
     glBegin(GL_POINTS);
     for(size_t i=0; i<s; i++)

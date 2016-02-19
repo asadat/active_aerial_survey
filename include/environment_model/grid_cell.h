@@ -56,7 +56,7 @@ public:
 
 protected:
     grid_cell_base():flags_(0), variance_(1), label_(0),
-        approx_label_(0), checked_for_skinny_(false), sensed_(false), covered_(false) {}
+        approx_label_(0), checked_for_skinny_(false), sensed_(false), covered_(false), ignored_(false) {}
 
     double ground_truth_value_;
     double estimated_value_;
