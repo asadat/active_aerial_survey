@@ -695,7 +695,7 @@ void grid_segment::get_uncertain_neighbour_cells(OutIterator out_iterator)
             auto nc = grid_.get_neighbour_cell_4(bn, i);
             if(nc)
             {
-                if(nc->is_uncertain() && !nc->is_covered())
+                if(/*nc->is_uncertain() ||*/ !nc->is_covered())
                 {
                     uncertain_cells.insert(nc);
                 }
@@ -745,27 +745,29 @@ void grid_segment::draw()
     glLineWidth(3);
     utility::gl_color(get_color());
 
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBegin(GL_POLYGON);
-    double dc=1;
-    if(!approximate_polygon_.empty())
-        dc = 1.0/approximate_polygon_.size();
-    double i=0;
-    for(auto it=begin_approx_poly(); it!= end_approx_poly(); it++)
+    if(approximate_polygon_.size() >= 3)
     {
-        glColor3f(i*dc, 0,1);
-        utility::gl_vertex3f(*it, 0.3);
-        i+=1.0;
+        double dc = 1;
+        if(!approximate_polygon_.empty())
+            dc = 1.0/approximate_polygon_.size();
+        double i = 0;
+
+        glBegin(GL_LINES);
+        for(auto it=begin_approx_poly(); it!=end_approx_poly(); ++it)
+        {
+            glColor3f(i*dc, 0, 1);
+            utility::gl_vertex3f(*it, 0.3);
+            utility::gl_vertex3f(*(it+1!=end_approx_poly()?it+1:begin_approx_poly()), 0.3);
+            i+=1.0;
+        }
+        glEnd();
     }
 
-    glEnd();
-
-    glPointSize(4);
-    glBegin(GL_POINTS);
-    for(auto cell:boundary_cells_)
-        utility::gl_vertex3f(cell->get_center(), 0.4);
-    glEnd();
+//    glPointSize(4);
+//    glBegin(GL_POINTS);
+//    for(auto cell:boundary_cells_)
+//        utility::gl_vertex3f(cell->get_center(), 0.4);
+//    glEnd();
 
     glColor4f(1, 1,1, 0.8);
     glPointSize(10);
@@ -802,7 +804,7 @@ void grid_segment::draw()
             glLineWidth(1);
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glBegin(GL_POLYGON);
-            utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
+            utility::draw_circle(sudo_center_, 3*active_survey_param::coarse_coverage_height, 0.52);
             glEnd();
         }
     }

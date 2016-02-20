@@ -11,7 +11,7 @@ mav::mav(environment_model &em, const Vector3f &position):
     velocity_(0,0,0),
     goal_(position),
     mav_controller_(),
-    stop_(true),
+    stop_(false),
     goal_reached_threshold_(0.5)
 {
     behaviour_controller_ = behaviour_controller::ptr(new behaviour_controller(*this));
@@ -30,22 +30,25 @@ void mav::sense()
     sensor_.sense(position_, [](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p){});
 }
 
-void mav::update(const double &dt)
+bool mav::update(const double &dt)
 {
     if(!stop_)
     {
-        auto t0 = ros::Time::now();
-        behaviour_controller_->update(dt);
-        auto dt_p = (ros::Time::now()-t0).toSec();
-        if(dt_p > 1.5)
-            ROS_WARN("mav update time: %.2f", dt_p);
+        //ROS_INFO("controller update begin ..");
+        return behaviour_controller_->update(dt);
+        //ROS_INFO("controller update end ..");
     }
+
+    return true;
 }
 
 void mav::update_state(const double &dt)
 {
     velocity_ = mav_controller_.get_velocity(goal_, position_);
-    auto d = dt*velocity_;
+    Vector3f d = dt*velocity_;
+
+ //   if(d.squaredNorm() > 500)
+ //       d.normalize();
 
     if(utility::distance_squared(position_, goal_) < d.squaredNorm())
         position_ = goal_;

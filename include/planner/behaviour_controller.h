@@ -16,7 +16,7 @@ public:
     behaviour_controller(mav &m);
     virtual ~behaviour_controller();
 
-    void update(const double &dt);
+    bool update(const double &dt);
     void draw();
 
     double get_available_flight_time();

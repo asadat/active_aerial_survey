@@ -33,7 +33,7 @@ public:
         return instance_;
     }
 
-    void update();
+    bool update();
     void draw();
     void hanlde_key_pressed(std::map<unsigned char, bool> &key, bool &update_key);
 

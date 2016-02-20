@@ -29,7 +29,7 @@ public:
     Vector3f get_goal() const {return goal_;}
 
     void sense();
-    void update(const double &dt);
+    bool update(const double &dt);
     bool at_goal();
     void stop();
     void resume();

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <Eigen/Core>
+#include <ctime>
 #include <ros/ros.h>
 #include "active_survey.h"
 
@@ -115,7 +116,13 @@ void update_event(int ms)
 
 void idle_event()
 {
-    active_survey::instance()->update();
+    bool asu = active_survey::instance()->update();
+    if(active_survey_param::auto_exit && !asu)
+    {
+        ros::shutdown();
+        exit(0);
+    }
+
     glutPostRedisplay();
 }
 
@@ -284,7 +291,15 @@ int main(int argc, char ** argv)
 
     if(active_survey_param::bypass_controller)
     {
-
+        while(ros::ok())
+        {
+            bool asu = active_survey::instance()->update();
+            if(active_survey_param::auto_exit && !asu)
+            {
+                ros::shutdown();
+                break;
+            }
+        }
     }
     else
     {

@@ -28,7 +28,7 @@ void behaviour_controller::start_sensing(bool override_min_travel_dist, const wa
                 active_survey_param::min_footprint*5*active_survey_param::min_footprint*5)
         {
             //ROS_INFO("calling sensing ...");
-            update_available_flight_time(false);
+            //update_available_flight_time(override_min_travel_dist);
             last_sensing_pos_ = mav_.get_position();
             mav_.sensor_.sense(mav_.get_position(),
                                [this, override_min_travel_dist, &reached_waypoint](std::set<grid_cell::ptr>& covered_cells, const Vector3f& p)
@@ -44,7 +44,7 @@ void behaviour_controller::start_sensing(bool override_min_travel_dist, const wa
     }
     else
     {
-        update_available_flight_time(false);
+        //update_available_flight_time(override_min_travel_dist);
     }
 }
 
@@ -133,11 +133,13 @@ void behaviour_controller::calculate_performace()
     double sensed_target_area = sensed_targets * cell_size[0] * cell_size[1];
     double sensed_poly_area = sensed_poly_cells * cell_size[0] * cell_size[1];
 
-    ROS_INFO("RESULT -> sensed polygons: %.1f sensed target: %.1f", sensed_poly_area, sensed_target_area);
+    ROS_INFO("RESULT %s -> sensed polygons: %.1f sensed target: %.1f",
+             active_survey_param::policy.c_str(), sensed_poly_area, sensed_target_area);
 }
 
-void behaviour_controller::update(const double &dt)
+bool behaviour_controller::update(const double &dt)
 {
+    //ROS_INFO("controller 1");
     waypoint::action requested_action =  behaviour_planner_->get_controller_action();
     behaviour_planner_->reset_controller_action();
 
@@ -148,6 +150,7 @@ void behaviour_controller::update(const double &dt)
         if(!mav_.at_goal())
         {
             mav_.update_state(dt);
+            update_available_flight_time(false);
             start_sensing(false, nullptr);
         }
         else
@@ -180,6 +183,7 @@ void behaviour_controller::update(const double &dt)
         switch_to_next_waypoint = true;
     }
 
+    //ROS_INFO("controller 2");
 
     if(switch_to_next_waypoint)
     {
@@ -215,11 +219,16 @@ void behaviour_controller::update(const double &dt)
         else
         {
             calculate_performace();
-            mav_.stop();
             ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer! (remaining flight time: %.fs)", get_available_flight_time());
+            mav_.stop();
+
+            return false;
         }
     }
 
+    //ROS_INFO("controller 3");
+
+    return true;
 }
 
 void behaviour_controller::draw()

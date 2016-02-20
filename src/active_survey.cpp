@@ -19,9 +19,9 @@ active_survey::active_survey(int argc, char **argv):
     active_survey_param::GetParams(private_node_handle_);
 
 
-    mav_ = std::shared_ptr<mav>(new mav(*environment_model::instance(), {-0.5f*static_cast<float>(active_survey_param::area_width),
+    mav_ = std::make_shared<mav>(*environment_model::instance(), Vector3f{-0.5f*static_cast<float>(active_survey_param::area_width),
                                                                          -0.5f*static_cast<float>(active_survey_param::area_height),
-                                                                         10.0f}));
+                                                                         10.0f});
 
     if(active_survey_param::logging)
     {
@@ -78,8 +78,13 @@ void active_survey::draw()
 }
 
 
-void active_survey::update()
+bool active_survey::update()
 {    
+//    static std::clock_t last_clk = std::clock();
+
+//    //printf("%.5f\n", (std::clock()-last_clk)/((double)CLOCKS_PER_SEC));
+//    last_clk = std::clock();
+
     static double ros_freq=15.0;
     static double ros_period = 1/ros_freq;
     static ros::Time last_time = ros::Time::now();
@@ -97,6 +102,7 @@ void active_survey::update()
         }
         else
         {
+            ROS_ERROR("ROS not OK !!!!!!!!!!");
             exit(0);
         }
     }
@@ -111,28 +117,14 @@ void active_survey::update()
         if(dt_mav > 0.1)
             dt_mav = 0.1;
 
-        mav_->update(dt_mav);
+        ROS_INFO("mav_update start ....");
+        bool  mav_res = mav_->update(dt_mav);
+        ROS_INFO("mav_update end %d ....", mav_res);
+
+        return  mav_res;
     }
 
-//    double dtmav = (ros::Time::now()-lastTimeMav).toSec();
-//    if(active_survey_param::bypass_controller || dtmav > 0.001)
-//    {
-//        lastTimeMav = ros::Time::now();
-//        if(!active_survey_param::bypass_controller)
-//        {
-//            mav.Update(dtmav);
-//            if((lastTimeMav-lastSensing).toSec() > 2)
-//            {
-//                lastSensing = lastTimeMav;
-//                //traversal->SensingUpdate(mav.GetPos());
-//            }
-//        }
-
-//        if(active_survey_param::bypass_controller || mav.AtGoal())
-//        {
-//            OnReachedGoal();
-//        }
-//    }
+    return true;
 }
 
 void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool &updateKey)

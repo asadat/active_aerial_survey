@@ -111,6 +111,8 @@ public:
     bool is_target() const;
     double get_area() const {return size_[0]*size_[1];}
 
+    bool can_be_ignored() const;
+
 private:
     grid_cell();
 

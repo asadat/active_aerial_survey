@@ -52,7 +52,7 @@ double active_survey_param::uncertain_cells_threshold = 10.0;
 
 int active_survey_param::non_ros::cell_drawing_mode = 0;
 double active_survey_param::non_ros::beta = 0.4;
-double active_survey_param::non_ros::target_threshold = 0.3;
+double active_survey_param::non_ros::target_threshold = 0.25;
 
 void active_survey_param::GetParams(ros::NodeHandle &nh)
 {

@@ -76,14 +76,24 @@ void grid_cell::draw()
         glEnd();
     }
 
+    static Vector4f offset{0.1,0.1,-0.1,-0.1};
+
     if(is_ignored())
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor4f(0.0,0.0,1, 0.2);
         glBegin(GL_QUADS);
-        utility::draw_quad(get_rect(), 0.15);
+        utility::draw_quad(get_rect()+offset, 0.15);
         glEnd();
     }
+}
+
+bool grid_cell::can_be_ignored() const
+{
+    if(get_variance() < 0.05 && get_estimated_value() < 0.05*active_survey_param::non_ros::target_threshold)
+        return true;
+    else
+        return false;
 }
 
 bool grid_cell::is_target() const
