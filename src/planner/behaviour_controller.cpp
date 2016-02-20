@@ -81,6 +81,8 @@ void behaviour_controller::update_available_flight_time(bool turning_point)
 
 void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::ptr next_wp)
 {
+    static size_t cumulative_value=0;
+
     if(prev_wp->get_type() != waypoint::type::HIGH_RESOLUTION ||
             next_wp->get_type() != waypoint::type::HIGH_RESOLUTION)
         return;
@@ -109,10 +111,17 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
         std::set<grid_cell::ptr> cells;
         mav_.get_grid().find_cells_in_rect(fp, cells, false);
         for(auto c:cells)
+        {
+            if(!c->is_sensed() && c->has_label())
+                cumulative_value++;
+
             c->set_sensed(true);
+        }
 
     }
     while(flag);
+
+    ROS_INFO("CUMULATIVE VALUE: %d %ld ", ((int)ros::Time::now().toSec())%100, cumulative_value);
 }
 
 void behaviour_controller::calculate_performace()

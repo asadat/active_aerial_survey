@@ -117,9 +117,9 @@ bool active_survey::update()
         if(dt_mav > 0.1)
             dt_mav = 0.1;
 
-        ROS_INFO("mav_update start ....");
+        //ROS_INFO("mav_update start ....");
         bool  mav_res = mav_->update(dt_mav);
-        ROS_INFO("mav_update end %d ....", mav_res);
+        //ROS_INFO("mav_update end %d ....", mav_res);
 
         return  mav_res;
     }

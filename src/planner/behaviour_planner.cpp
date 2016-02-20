@@ -454,7 +454,7 @@ void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
 {
    // update_grid_gp(covered_cells_.begin(), covered_cells_.end(), false);
     update_segments(covered_cells_.begin(), covered_cells_.end());
-    covered_cells_.clear();
+
 
     std::vector<grid_segment::ptr> segments;
     for(auto &sp: segments_)
@@ -475,6 +475,12 @@ void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
     //ROS_INFO(" before planning .....");
     plan_sensing_tour(segments, last_sensing_position_, get_available_time_(), last_waypoint_, reached_waypoint, plan_);
     //ROS_INFO(" after planning ......");
+
+    for(auto it=covered_cells_.begin(); it!=covered_cells_.end();++it)
+    {
+        (*it)->set_ignored(true);
+    }
+    covered_cells_.clear();
 
     for(auto seg:segments)
         seg->set_ignored();
