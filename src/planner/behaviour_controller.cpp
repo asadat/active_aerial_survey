@@ -6,8 +6,10 @@ namespace asn
 
 behaviour_controller::behaviour_controller(mav &m):
     mav_(m),
-    behaviour_planner_(new behaviour_planner(m)),
+    behaviour_planner_(std::make_shared<behaviour_planner>(m)),
     sensing_(false),
+    waypoint_(nullptr),
+    previous_waypoint_(nullptr),
     avaiable_flight_time_(active_survey_param::time_limit)
 {
     behaviour_planner_->set_get_available_time([this](){return this->get_available_flight_time();});
@@ -51,17 +53,17 @@ void behaviour_controller::start_sensing(bool override_min_travel_dist, const wa
 double behaviour_controller::get_available_flight_time()
 {
     double aft;
-    flight_time_mutex_.lock();
+    //flight_time_mutex_.lock();
     aft = avaiable_flight_time_;
-    flight_time_mutex_.unlock();
+    //flight_time_mutex_.unlock();
     return aft;
 }
 
 void behaviour_controller::reduce_available_flight_time(double dt)
 {
-    flight_time_mutex_.lock();
+    //flight_time_mutex_.lock();
     avaiable_flight_time_ -= dt;
-    flight_time_mutex_.unlock();
+    //flight_time_mutex_.unlock();
 }
 
 void behaviour_controller::update_available_flight_time(bool turning_point)
@@ -116,18 +118,28 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
                 cumulative_value++;
 
             c->set_sensed(true);
+
+            double sensed_time = active_survey_param::time_limit - get_available_flight_time();
+            if(sensed_time >=0)
+                c->set_sensed_time(sensed_time);
+            else
+                ROS_ERROR("**** sensed time < 0");
         }
 
     }
     while(flag);
 
-    ROS_INFO("CUMULATIVE VALUE: %d %ld ", ((int)ros::Time::now().toSec())%100, cumulative_value);
+    ROS_INFO("CUMULATIVE VALUE: %.1f %ld ", active_survey_param::time_limit - get_available_flight_time() , cumulative_value);
 }
 
 void behaviour_controller::calculate_performace()
 {
+    auto cell_size = mav_.get_grid().get_cell_size();
+
     size_t sensed_poly_cells = 0;
     size_t sensed_targets = 0;
+    double cell_area = cell_size[0] * cell_size[1];
+    double discounted_reward = 0;
 
     for(auto it=mav_.get_grid().begin(); it !=mav_.get_grid().end(); ++it)
     {
@@ -135,15 +147,19 @@ void behaviour_controller::calculate_performace()
             sensed_targets++;
 
         if((*it)->is_covered() && (*it)->is_sensed() && (*it)->has_label())
+        {
             sensed_poly_cells++;
+            discounted_reward += cell_area * pow(active_survey_param::discount_factor, (*it)->get_sensed_time());
+        }
     }
 
-    auto cell_size = mav_.get_grid().get_cell_size();
-    double sensed_target_area = sensed_targets * cell_size[0] * cell_size[1];
-    double sensed_poly_area = sensed_poly_cells * cell_size[0] * cell_size[1];
+    double sensed_target_area = sensed_targets * cell_area;
+    double sensed_poly_area = sensed_poly_cells * cell_area;
 
-    ROS_INFO("RESULT %s -> sensed polygons: %.1f sensed target: %.1f",
-             active_survey_param::policy.c_str(), sensed_poly_area, sensed_target_area);
+    ROS_INFO("RESULT %s -> discounted_reward: %.3f sensed polygons: %.1f sensed target: %.1f Interesting: %.1f Patches: %d exploit_rate: %.3f seed: %.1f",
+             active_survey_param::policy.c_str(), discounted_reward, sensed_poly_area, sensed_target_area,
+             active_survey_param::percent_interesting, active_survey_param::patches,
+             active_survey_param::exploitation_rate, active_survey_param::random_seed);
 }
 
 bool behaviour_controller::update(const double &dt)
@@ -159,7 +175,6 @@ bool behaviour_controller::update(const double &dt)
         if(!mav_.at_goal())
         {
             mav_.update_state(dt);
-            update_available_flight_time(false);
             start_sensing(false, nullptr);
         }
         else
@@ -186,6 +201,9 @@ bool behaviour_controller::update(const double &dt)
                 waypoint_->on_reached_waypoint(waypoint_);
             }
         }
+
+        update_available_flight_time(false);
+
     }
     else
     {
@@ -201,11 +219,11 @@ bool behaviour_controller::update(const double &dt)
 
         update_available_flight_time(true);
 
-        waypoint::ptr prev_waypoint = waypoint_;
-        waypoint_ = behaviour_planner_->get_next_waypoint();
+        if(waypoint_ && previous_waypoint_)
+            update_sensed_cells(previous_waypoint_, waypoint_);
 
-        if(waypoint_ && prev_waypoint)
-            update_sensed_cells(prev_waypoint, waypoint_);
+        previous_waypoint_ = waypoint_;
+        waypoint_ = behaviour_planner_->get_next_waypoint();
 
         if(waypoint_)
         {

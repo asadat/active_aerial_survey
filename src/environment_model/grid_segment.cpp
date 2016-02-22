@@ -804,7 +804,7 @@ void grid_segment::draw()
             glLineWidth(1);
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glBegin(GL_POLYGON);
-            utility::draw_circle(sudo_center_, 3*active_survey_param::coarse_coverage_height, 0.52);
+            utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
             glEnd();
         }
     }

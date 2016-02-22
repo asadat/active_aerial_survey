@@ -294,9 +294,13 @@ int main(int argc, char ** argv)
         while(ros::ok())
         {
             bool asu = active_survey::instance()->update();
-            if(active_survey_param::auto_exit && !asu)
+            if(!asu)
             {
-                ros::shutdown();
+                if(active_survey_param::auto_exit && !asu)
+                {
+                    ros::shutdown();
+                }
+
                 break;
             }
         }

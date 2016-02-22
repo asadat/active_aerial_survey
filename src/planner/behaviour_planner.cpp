@@ -426,11 +426,8 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
             utility::distance_squared(seg_coverage_path.back(), pos))
         std::reverse(seg_coverage_path.begin(), seg_coverage_path.end());
 
-    while(coverage_plan.cost(pos, cur_plan) < available_flight_time)
+    while(!seg_coverage_path.empty())
     {
-        if(seg_coverage_path.empty())
-            break;
-
         waypoint::ptr first_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
         seg_coverage_path.erase(seg_coverage_path.begin());
 
@@ -438,7 +435,18 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
         first_waypoint->set_type(waypoint::type::HIGH_RESOLUTION);
 
         coverage_plan.push_back(first_waypoint);
+
+        if(coverage_plan.cost(pos, cur_plan) > available_flight_time)
+        {
+            if(seg_coverage_path.size()+1 < orig_lm_size)
+            {
+                coverage_plan.pop_last_waypoint();
+            }
+            break;
+        }
+
     }
+
 
     if(orig_lm_size == seg_coverage_path.size()+1)
     {
@@ -516,7 +524,7 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
         seg->get_uncertain_neighbour_cells(std::back_inserter(uncertain_cells_));
     }
 
-    const double dist = 3*active_survey_param::coarse_coverage_height;
+    const double dist = 2*active_survey_param::coarse_coverage_height;
     for(auto &sp:segments_)
     {
         grid_segment::ptr seg = sp.second;

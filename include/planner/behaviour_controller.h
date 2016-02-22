@@ -32,10 +32,11 @@ private:
     void calculate_performace();
 
     Vector3f last_pos_flight_time_update;
+    bool sensing_;
 
     waypoint::ptr waypoint_;
+    waypoint::ptr previous_waypoint_;
     Vector3f last_sensing_pos_;
-    bool sensing_;
 
     std::mutex flight_time_mutex_;
     double avaiable_flight_time_;
