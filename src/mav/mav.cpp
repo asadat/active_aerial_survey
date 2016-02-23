@@ -83,7 +83,7 @@ void mav::draw()
     glLineWidth(1.0);
     glColor3f(0.4, 0.4, 0.4);
     glBegin(GL_QUADS);
-    utility::draw_quad(fp);
+    utility::draw_quad(fp, 0.2);
     glEnd();
 
     glColor3f(0,0,1);

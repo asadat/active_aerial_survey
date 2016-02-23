@@ -98,7 +98,8 @@ bool grid_cell::can_be_ignored() const
 
 bool grid_cell::is_target() const
 {
-    return estimated_value_ > active_survey_param::non_ros::target_threshold;
+    return !(estimated_value_ + active_survey_param::non_ros::beta* variance_ < active_survey_param::non_ros::target_threshold);
+    //return estimated_value_ > active_survey_param::non_ros::target_threshold;
 }
 
 bool grid_cell::is_uncertain() const

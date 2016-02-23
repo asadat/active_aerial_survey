@@ -54,6 +54,8 @@ public:
     inline void set_sensed_time(const double &sensed_time){sensed_time_=(sensed_time<sensed_time_?sensed_time:sensed_time_);}
     inline double get_sensed_time() const {return sensed_time_;}
 
+    inline bool is_true_target(const double& thr) const { return ground_truth_value_ >= thr;}
+
     int flags_;
 
 protected:

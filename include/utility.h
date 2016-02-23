@@ -123,6 +123,11 @@ static float random_number_f(const float &a, const float &b)
     return a+((rand()%rand_precision)*rand_precision_inv*(b-a));
 }
 
+static double projected_distance_squared(const Vector2f & v2f, const Vector3f &v3f)
+{
+    return (v2f[0]-v3f[0])*(v2f[0]-v3f[1])+(v2f[1]-v3f[1])*(v2f[1]-v3f[1]);
+}
+
 static bool is_point_inside_rect(const Vector2f &v, const rect &r, const double &d_thr=epsilon)
 {
     if(v[0]-r[0] > d_thr &&

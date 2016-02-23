@@ -74,7 +74,15 @@ void behaviour_controller::update_available_flight_time(bool turning_point)
     auto mav_pos = mav_.get_position();
     double travelled_dist = utility::distance(mav_pos, last_pos_flight_time_update);
 
-    reduce_available_flight_time(travelled_dist/active_survey_param::average_speed);
+    double dh = fabs(mav_pos[2]-last_pos_flight_time_update[2]);
+    if(dh> 0.1)
+    {
+        reduce_available_flight_time(2.0*travelled_dist/active_survey_param::average_speed);
+    }
+    else
+    {
+        reduce_available_flight_time(travelled_dist/active_survey_param::average_speed);
+    }
 
     last_pos_flight_time_update = mav_pos;
 
@@ -129,7 +137,7 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
     }
     while(flag);
 
-    ROS_INFO("CUMULATIVE VALUE: %.1f %ld ", active_survey_param::time_limit - get_available_flight_time() , cumulative_value);
+  //  ROS_INFO("CUMULATIVE VALUE: %.1f %ld ", active_survey_param::time_limit - get_available_flight_time() , cumulative_value);
 }
 
 void behaviour_controller::calculate_performace()
@@ -140,6 +148,7 @@ void behaviour_controller::calculate_performace()
     size_t sensed_targets = 0;
     double cell_area = cell_size[0] * cell_size[1];
     double discounted_reward = 0;
+    double true_discounted_reward = 0;
 
     for(auto it=mav_.get_grid().begin(); it !=mav_.get_grid().end(); ++it)
     {
@@ -151,13 +160,18 @@ void behaviour_controller::calculate_performace()
             sensed_poly_cells++;
             discounted_reward += cell_area * pow(active_survey_param::discount_factor, (*it)->get_sensed_time());
         }
+
+        if((*it)->is_covered() && (*it)->is_sensed() && (*it)->is_true_target(active_survey_param::non_ros::target_threshold))
+        {
+            true_discounted_reward += cell_area * pow(active_survey_param::discount_factor, (*it)->get_sensed_time());
+        }
     }
 
-    double sensed_target_area = sensed_targets * cell_area;
+    //double sensed_target_area = sensed_targets * cell_area;
     double sensed_poly_area = sensed_poly_cells * cell_area;
 
-    ROS_INFO("RESULT %s -> discounted_reward: %.3f sensed polygons: %.1f sensed target: %.1f Interesting: %.1f Patches: %d exploit_rate: %.3f seed: %.1f",
-             active_survey_param::policy.c_str(), discounted_reward, sensed_poly_area, sensed_target_area,
+    ROS_INFO("RESULT %s -> discounted_reward: %.3f sensed polygons: %.1f true_d_r: %.1f Interesting: %.1f Patches: %d exploit_rate: %.3f seed: %.1f",
+             active_survey_param::policy.c_str(), discounted_reward, sensed_poly_area, true_discounted_reward,
              active_survey_param::percent_interesting, active_survey_param::patches,
              active_survey_param::exploitation_rate, active_survey_param::random_seed);
 }
@@ -172,6 +186,8 @@ bool behaviour_controller::update(const double &dt)
 
     if(requested_action != waypoint::action::INTERRUPT_WAYPOINT)
     {
+        update_available_flight_time(false);
+
         if(!mav_.at_goal())
         {
             mav_.update_state(dt);
@@ -201,9 +217,6 @@ bool behaviour_controller::update(const double &dt)
                 waypoint_->on_reached_waypoint(waypoint_);
             }
         }
-
-        update_available_flight_time(false);
-
     }
     else
     {
@@ -246,7 +259,7 @@ bool behaviour_controller::update(const double &dt)
         else
         {
             calculate_performace();
-            ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer! (remaining flight time: %.fs)", get_available_flight_time());
+            ROS_INFO_THROTTLE(2,"behaviour controller: invalid waypoint pointer! (%.fs)", get_available_flight_time());
             mav_.stop();
 
             return false;

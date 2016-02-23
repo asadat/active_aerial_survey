@@ -64,19 +64,30 @@ double plan::cost(const Vector3f &cur_pos, const plan &next_plan)
     double dist_cost=0;
     Vector3f v =cur_pos;
 
+
     for(auto it=begin(); it!=end(); ++it)
     {
-        dist_cost += utility::distance(v, (*it)->get_position());
+        auto p=(*it)->get_position();
+        if(fabs(v[2]-p[2] > 0.1))
+            dist_cost += 2.0*utility::distance(v, p)/active_survey_param::average_speed;
+        else
+            dist_cost += utility::distance(v, p)/active_survey_param::average_speed;
+
         v = (*it)->get_position();
     }
 
     for(auto it=next_plan.begin(); it!=next_plan.end(); ++it)
     {
-        dist_cost += utility::distance(v, (*it)->get_position());
+        auto p=(*it)->get_position();
+        if(fabs(v[2]-p[2] > 0.1))
+            dist_cost += 2.0*utility::distance(v, p)/active_survey_param::average_speed;
+        else
+            dist_cost += utility::distance(v, p)/active_survey_param::average_speed;
+
         v = (*it)->get_position();
     }
 
-    return dist_cost/active_survey_param::average_speed + (1+waypoints_.size()+next_plan.waypoints_.size())
+    return dist_cost + (1+waypoints_.size()+next_plan.waypoints_.size())
             *active_survey_param::turning_time;
 }
 

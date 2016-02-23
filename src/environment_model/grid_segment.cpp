@@ -555,7 +555,7 @@ bool grid_segment::plan_coverage_path(const double &inter_lap_distance, const do
     coverage_path.push_back(en0);
 
     double n =-1;
-    while(convexhull_height / inter_lap_distance > n)
+    while(n <= ceil((convexhull_height+ 2*active_survey_param::sensing_height) / inter_lap_distance))
     {
         n+=1.0;
 
@@ -610,6 +610,10 @@ bool grid_segment::plan_coverage_path(const double &inter_lap_distance, const do
                 }
             }
         }
+        else if(intersections.size() == 1)
+        {
+
+        }
         else
         {
             // no intersection !!!!!!
@@ -618,8 +622,12 @@ bool grid_segment::plan_coverage_path(const double &inter_lap_distance, const do
 
     if(coverage_path.size() > 2)
     {
-        coverage_path.erase(coverage_path.begin());
-        coverage_path.erase(coverage_path.begin());
+        for(auto &p: coverage_path)
+        {
+            p -= 0.3*(offset0) * sweep_dir;
+        }
+        //coverage_path.erase(coverage_path.begin());
+        //coverage_path.erase(coverage_path.begin());
     }
     else
     {
@@ -776,38 +784,38 @@ void grid_segment::draw()
         utility::gl_vertex3f(cell->get_center(), 0.4);
     glEnd();
 
-    if(is_valid())
-    {
-        utility::gl_color(cross_color_);
-        if(is_uncertain())
-            glLineWidth(8);
-        else
-            glLineWidth(3);
+//    if(is_valid())
+//    {
+//        utility::gl_color(cross_color_);
+//        if(is_uncertain())
+//            glLineWidth(8);
+//        else
+//            glLineWidth(3);
 
-        glBegin(GL_LINES);
-        utility::draw_cross(sudo_center_, 0.5);
-        glEnd();
+//        glBegin(GL_LINES);
+//        utility::draw_cross(sudo_center_, 0.5);
+//        glEnd();
 
-        if(delayed_segment_)
-        {
-            glColor3f(0.5, 0.5,1);
-            glLineWidth(2);
-            glBegin(GL_LINES);
-            utility::gl_vertex3f(delayed_segment_->get_sudo_center(), 0.51);
-            utility::gl_vertex3f(sudo_center_, 0.51);
-            glEnd();
-        }
+//        if(delayed_segment_)
+//        {
+//            glColor3f(0.5, 0.5,1);
+//            glLineWidth(2);
+//            glBegin(GL_LINES);
+//            utility::gl_vertex3f(delayed_segment_->get_sudo_center(), 0.51);
+//            utility::gl_vertex3f(sudo_center_, 0.51);
+//            glEnd();
+//        }
 
-        if(is_uncertain())
-        {
-            utility::gl_color(cross_color_);
-            glLineWidth(1);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glBegin(GL_POLYGON);
-            utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
-            glEnd();
-        }
-    }
+//        if(is_uncertain())
+//        {
+//            utility::gl_color(cross_color_);
+//            glLineWidth(1);
+//            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//            glBegin(GL_POLYGON);
+//            utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
+//            glEnd();
+//        }
+//    }
 
 //    if(is_valid())
 //    {
