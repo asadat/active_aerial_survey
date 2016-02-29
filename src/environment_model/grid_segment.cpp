@@ -753,22 +753,25 @@ void grid_segment::draw()
     glLineWidth(3);
     utility::gl_color(get_color());
 
-    if(approximate_polygon_.size() >= 3)
+    if(active_survey_param::non_ros::cell_drawing_mode==5)
     {
-        double dc = 1;
-        if(!approximate_polygon_.empty())
-            dc = 1.0/approximate_polygon_.size();
-        double i = 0;
-
-        glBegin(GL_LINES);
-        for(auto it=begin_approx_poly(); it!=end_approx_poly(); ++it)
+        if(convexhull_.size() >= 3)
         {
-            glColor3f(i*dc, 0, 1);
-            utility::gl_vertex3f(*it, 0.3);
-            utility::gl_vertex3f(*(it+1!=end_approx_poly()?it+1:begin_approx_poly()), 0.3);
-            i+=1.0;
+            double dc = 1;
+            if(!convexhull_.empty())
+                dc = 1.0/convexhull_.size();
+            double i = 0;
+
+            glBegin(GL_LINES);
+            for(auto it=begin_convexhull(); it!=end_convexhull(); ++it)
+            {
+                glColor3f(i*dc, 0, 1);
+                utility::gl_vertex3f(*it, 0.3);
+                utility::gl_vertex3f(*(it+1!=end_convexhull()?it+1:begin_convexhull()), 0.3);
+                i+=1.0;
+            }
+            glEnd();
         }
-        glEnd();
     }
 
 //    glPointSize(4);
@@ -777,12 +780,12 @@ void grid_segment::draw()
 //        utility::gl_vertex3f(cell->get_center(), 0.4);
 //    glEnd();
 
-    glColor4f(1, 1,1, 0.8);
-    glPointSize(10);
-    glBegin(GL_POINTS);
-    for(auto cell:uncertain_boundary_)
-        utility::gl_vertex3f(cell->get_center(), 0.4);
-    glEnd();
+//    glColor4f(1, 1,1, 0.8);
+//    glPointSize(10);
+//    glBegin(GL_POINTS);
+//    for(auto cell:uncertain_boundary_)
+//        utility::gl_vertex3f(cell->get_center(), 0.4);
+//    glEnd();
 
 //    if(is_valid())
 //    {

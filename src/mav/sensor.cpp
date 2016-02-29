@@ -120,6 +120,7 @@ size2f sensor::get_footprint_size(const double &altitude) const
 
 void sensor::draw()
 {
+    return;
     gaussian_field::instance()->draw();
     glColor3f(1,1,0);
     glPointSize(3);
