@@ -631,7 +631,7 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
         }
     }
 
-   ROS_INFO("AVAILABLE_TIME: >>>>>> %.1f   %.1f", get_available_time_(), plan_.cost(last_sensing_position_, plan()));
+   //ROS_INFO("AVAILABLE_TIME: >>>>>> %.1f   %.1f", get_available_time_(), plan_.cost(last_sensing_position_, plan()));
    // ROS_INFO_THROTTLE(1.0, "Covered cells: %ld", covered_cells_.size());
 }
 

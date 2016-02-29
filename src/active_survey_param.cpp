@@ -55,6 +55,8 @@ int active_survey_param::non_ros::cell_drawing_mode = 0;
 double active_survey_param::non_ros::beta = 0.4;
 double active_survey_param::non_ros::target_threshold = 0.25;
 
+int active_survey_param::run_number = 0;
+
 void active_survey_param::GetParams(ros::NodeHandle &nh)
 {
     nh.param<double>("FOV",FOV,1.57);
@@ -108,6 +110,8 @@ void active_survey_param::GetParams(ros::NodeHandle &nh)
     nh.param<double>("sensing_height", sensing_height, 2.0);
     nh.param<double>("uncertain_cell_threshold", uncertain_cells_threshold, 10.0);
     nh.param<double>("discount_factor", discount_factor, 0.999);
+
+    nh.param<int>("run_number", run_number, 0);
 
 
 }

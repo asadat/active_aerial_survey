@@ -105,8 +105,10 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
     double step = std::min(fabs(fp[0]-fp[2]), fabs(fp[1]-fp[3]));
     bool flag = true;
 
+    double t0 = active_survey_param::time_limit - get_available_flight_time() - utility::distance(p,ep)/active_survey_param::average_speed;
+
     do
-    {
+    {        
         if(utility::distance_squared(p,ep) > step*step)
         {
             p += step*dir;
@@ -116,6 +118,8 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
             p = ep;
             flag = false;
         }
+
+        t0 += step/active_survey_param::average_speed;
 
         fp = mav_.sensor_.get_rect(p);
         std::set<grid_cell::ptr> cells;
@@ -127,7 +131,7 @@ void behaviour_controller::update_sensed_cells(waypoint::ptr prev_wp, waypoint::
 
             c->set_sensed(true);
 
-            double sensed_time = active_survey_param::time_limit - get_available_flight_time();
+            double sensed_time = t0;//active_survey_param::time_limit - get_available_flight_time();
             if(sensed_time >=0)
                 c->set_sensed_time(sensed_time);
             else
@@ -163,17 +167,21 @@ void behaviour_controller::calculate_performace()
 
         if((*it)->is_covered() && (*it)->is_sensed() && (*it)->is_true_target(active_survey_param::non_ros::target_threshold))
         {
+            ROS_INFO("POLICY %s -> run: %d cell_sensed time: %.1f Interesting: %.1f Patches: %d exploit_rate: %.3f seed: %.1f ",
+                     active_survey_param::policy.c_str(), active_survey_param::run_number, (*it)->get_sensed_time(),
+                     active_survey_param::percent_interesting, active_survey_param::patches,
+                     active_survey_param::exploitation_rate, active_survey_param::random_seed);
             true_discounted_reward += cell_area * pow(active_survey_param::discount_factor, (*it)->get_sensed_time());
         }
     }
 
     //double sensed_target_area = sensed_targets * cell_area;
-    double sensed_poly_area = sensed_poly_cells * cell_area;
+   // double sensed_poly_area = sensed_poly_cells * cell_area;
 
-    ROS_INFO("RESULT %s -> discounted_reward: %.3f sensed polygons: %.1f true_d_r: %.1f Interesting: %.1f Patches: %d exploit_rate: %.3f seed: %.1f",
-             active_survey_param::policy.c_str(), discounted_reward, sensed_poly_area, true_discounted_reward,
-             active_survey_param::percent_interesting, active_survey_param::patches,
-             active_survey_param::exploitation_rate, active_survey_param::random_seed);
+//    ROS_INFO("RESULT %s -> discounted_reward: %.3f sensed polygons: %.1f true_d_r: %.1f Interesting: %.1f Patches: %d exploit_rate: %.3f seed: %.1f",
+//             active_survey_param::policy.c_str(), discounted_reward, sensed_poly_area, true_discounted_reward,
+//             active_survey_param::percent_interesting, active_survey_param::patches,
+//             active_survey_param::exploitation_rate, active_survey_param::random_seed);
 }
 
 bool behaviour_controller::update(const double &dt)

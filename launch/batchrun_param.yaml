@@ -19,8 +19,9 @@ sensing_height: 2.0
 average_speed: 1.0
 uncertain_cells_threshold: 1.0
 discount_factor: 0.999
-percent_interesting: 25
-random_seed: 18201
-patches: 9
-policy: greedy
-exploitation_rate: 1.005
+percent_interesting: 90
+random_seed: 20894
+patches: 10
+exploitation_rate: 0.005
+run_number: 20
+policy: semi_greedy
