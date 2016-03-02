@@ -159,12 +159,12 @@ void active_survey::hanlde_key_pressed(std::map<unsigned char, bool> &key, bool 
     else if(key['='])
     {
         active_survey_param::speed += 0.5;
-        updateKey = false;
+        updateKey = true;
     }
     else if(key['-'])
     {
         active_survey_param::speed -= 0.5;
-        updateKey = false;
+        updateKey = true;
     }
     else if(key['o'])
     {

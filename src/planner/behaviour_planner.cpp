@@ -151,6 +151,7 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
         else
             two_stage(reached_waypoint);
 
+       // mav_.stop();
 
         float ptime = (std::clock()-last_clk)/((double)CLOCKS_PER_SEC);
         if(ptime>0.01)
@@ -245,7 +246,7 @@ void behaviour_planner::update_segments(const cell_iterator &begin_it, const cel
 
 void behaviour_planner::draw()
 {
-    if(!plan_.empty())
+    if(false&&!plan_.empty())
     {
         glLineWidth(3);
         glColor3f(0.1,0.7, 0.3);
