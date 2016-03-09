@@ -168,7 +168,12 @@ static void gl_vertex3f(const Vector3f& v)
     glVertex3f(v[0], v[1], v[2]);
 }
 
-static void gl_vertex3f(const Vector2f& v, const double & z)
+//static void gl_vertex3f(const Vector2f& v, const double & z)
+//{
+//    glVertex3f(v[0], v[1], z);
+//}
+
+static void gl_vertex3f(const VectorXf& v, const double & z)
 {
     glVertex3f(v[0], v[1], z);
 }

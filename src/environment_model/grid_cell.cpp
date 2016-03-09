@@ -29,7 +29,7 @@ void grid_cell::draw()
     else if(active_survey_param::non_ros::cell_drawing_mode == 1)
     {
         if(!is_covered())
-            glColor3f(0.9,0.9,1);
+            glColor3f(0.45,0.55,0.4);
         else
         glColor3f(1-2*df_iso*ceil(estimated_value_/df_iso),
                   1-2*df_iso*ceil(estimated_value_/df_iso),
@@ -58,7 +58,7 @@ void grid_cell::draw()
 //                  2*variance_, ignored_?0.3:1.0);
     else if(active_survey_param::non_ros::cell_drawing_mode == 5)
         utility::gl_color(utility::get_altitude_color(label_));
-    else if(active_survey_param::non_ros::cell_drawing_mode == 6)
+    else if(active_survey_param::non_ros::cell_drawing_mode == 2)
     {
         double dsc = pow(0.999, sensed_time_);
         utility::gl_color(sensed_&&is_target()?Vector3f(1-dsc,1-dsc,1-dsc):Vector3f(1,1,1));
@@ -75,10 +75,10 @@ void grid_cell::draw()
     utility::draw_quad(get_rect());
     glEnd();
 
-    if(false&& ground_truth_value_ > active_survey_param::non_ros::target_threshold)
+    if(ground_truth_value_ > active_survey_param::non_ros::target_threshold)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glColor3f(0.1,1,0.1);
+        glColor3f(1,0.95,0.7);
         glBegin(GL_QUADS);
         utility::draw_quad(get_rect(), 0.1);
         glEnd();

@@ -753,26 +753,27 @@ void grid_segment::draw()
     glLineWidth(2);
     utility::gl_color(get_color());
 
-//    if(true || active_survey_param::non_ros::cell_drawing_mode==5)
-//    {
-//        if(convexhull_.size() >= 3)
-//        {
-//            double dc = 1;
-//            if(!convexhull_.empty())
-//                dc = 1.0/convexhull_.size();
-//            double i = 0;
+    if(true || active_survey_param::non_ros::cell_drawing_mode==5)
+    {
+        if(convexhull_.size() >= 3)
+        {
+            double dc = 1;
+            if(!convexhull_.empty())
+                dc = 1.0/convexhull_.size();
+            double i = 0;
 
-//            glBegin(GL_LINES);
-//            for(auto it=begin_convexhull(); it!=end_convexhull(); ++it)
-//            {
-//                //glColor3f(i*dc, 0, 1);
-//                utility::gl_vertex3f(*it, 0.3);
-//                utility::gl_vertex3f(*(it+1!=end_convexhull()?it+1:begin_convexhull()), 0.3);
-//                i+=1.0;
-//            }
-//            glEnd();
-//        }
-//    }
+            glBegin(GL_LINES);
+            for(auto it=begin_convexhull(); it!=end_convexhull(); ++it)
+            {
+                //glColor3f(i*dc, 0, 1);
+                utility::gl_vertex3f(*it, 0.3);
+                utility::gl_vertex3f(*(it+1!=end_convexhull()?it+1:begin_convexhull()), 0.3);
+                i+=1.0;
+            }
+            glEnd();
+        }
+    }
+
 
     //    glPointSize(4);
     //    glBegin(GL_POINTS);
@@ -789,15 +790,16 @@ void grid_segment::draw()
 
         if(is_valid())
         {
-            utility::gl_color(cross_color_);
-            if(is_uncertain())
-                glLineWidth(8);
-            else
-                glLineWidth(3);
 
-            glBegin(GL_LINES);
-            utility::draw_cross(sudo_center_, 0.5);
-            glEnd();
+//            utility::gl_color(cross_color_);
+//            if(is_uncertain())
+//                glLineWidth(8);
+//            else
+//                glLineWidth(3);
+
+//            glBegin(GL_LINES);
+//            utility::draw_cross(sudo_center_, 0.5);
+//            glEnd();
 
 //            if(delayed_segment_)
 //            {
