@@ -8,6 +8,7 @@
 #include "environment_model/grid_cell.h"
 #include "environment_model/grid_segment.h"
 #include "planner/plan.h"
+#include "planner/trajectory_optimizer.h"
 
 namespace asn
 {
