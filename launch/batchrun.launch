@@ -1,7 +1,7 @@
 <launch>
-    <node name="nuc" pkg="nuc" type="NUC" clear_params="true" output="screen">
-        <rosparam command="load" file="$(find nuc)/launch/batchrun_param.yaml" />
-	<param name="nuc_dir" type="string" value="$(find nuc)" /> 
+    <node name="active_survey" pkg="active_survey" type="active_survey" clear_params="true" output="screen">
+        <rosparam command="load" file="$(find active_survey)/launch/batchrun_param.yaml" />
+	<param name="active_survey_dir" type="string" value="$(find active_survey)" /> 
     </node>
 </launch>
 

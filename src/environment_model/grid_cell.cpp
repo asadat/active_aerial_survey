@@ -19,17 +19,22 @@ grid_cell::~grid_cell(){}
 
 void grid_cell::draw()
 {
-    static const double df_iso =0.1;
+    static const double df_iso =0.05;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glLineWidth(1.0);
     if(active_survey_param::non_ros::cell_drawing_mode == 0)
-        glColor3f(2*ground_truth_value_,
-                  2*ground_truth_value_,
-                  2*ground_truth_value_);
+        glColor3f(1.5-2*ground_truth_value_,
+                  1.5-2*ground_truth_value_,
+                  1-2*ground_truth_value_);
     else if(active_survey_param::non_ros::cell_drawing_mode == 1)
-        glColor3f(2*df_iso*ceil(estimated_value_/df_iso),
-                  2*df_iso*ceil(estimated_value_/df_iso),
-                  2*df_iso*ceil(estimated_value_/df_iso));
+    {
+        if(!is_covered())
+            glColor3f(0.45,0.55,0.4);
+        else
+        glColor3f(1-2*df_iso*ceil(estimated_value_/df_iso),
+                  1-2*df_iso*ceil(estimated_value_/df_iso),
+                  1-2*df_iso*ceil(estimated_value_/df_iso));
+    }
     else if(active_survey_param::non_ros::cell_drawing_mode == 3)
         glColor3f(2*variance_,
                   2*variance_,
@@ -53,8 +58,11 @@ void grid_cell::draw()
 //                  2*variance_, ignored_?0.3:1.0);
     else if(active_survey_param::non_ros::cell_drawing_mode == 5)
         utility::gl_color(utility::get_altitude_color(label_));
-    else if(active_survey_param::non_ros::cell_drawing_mode == 6)
-        utility::gl_color(sensed_&&is_target()?Vector3f(1,1,1):Vector3f(0,0,0));
+    else if(active_survey_param::non_ros::cell_drawing_mode == 2)
+    {
+        double dsc = pow(0.999, sensed_time_);
+        utility::gl_color(sensed_&&is_target()?Vector3f(1-dsc,1-dsc,1-dsc):Vector3f(1,1,1));
+    }
     else
     {
         if(is_covered())
@@ -70,7 +78,7 @@ void grid_cell::draw()
     if(ground_truth_value_ > active_survey_param::non_ros::target_threshold)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glColor3f(0.1,1,0.1);
+        glColor3f(1,0.95,0.7);
         glBegin(GL_QUADS);
         utility::draw_quad(get_rect(), 0.1);
         glEnd();
@@ -78,7 +86,7 @@ void grid_cell::draw()
 
     static Vector4f offset{0.1,0.1,-0.1,-0.1};
 
-    if(is_ignored())
+    if(false && is_ignored())
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor4f(0.0,0.0,1, 0.2);
@@ -98,7 +106,8 @@ bool grid_cell::can_be_ignored() const
 
 bool grid_cell::is_target() const
 {
-    return estimated_value_ > active_survey_param::non_ros::target_threshold;
+    return !(estimated_value_ + active_survey_param::non_ros::beta* variance_ < active_survey_param::non_ros::target_threshold);
+    //return estimated_value_ > active_survey_param::non_ros::target_threshold;
 }
 
 bool grid_cell::is_uncertain() const

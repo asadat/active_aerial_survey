@@ -66,6 +66,8 @@ public:
     static double coarse_coverage_height;
     static double sensing_height;
     static double uncertain_cells_threshold;
+    static double discount_factor;
+    static int run_number;
 
     class non_ros
     {

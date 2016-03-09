@@ -15,6 +15,7 @@ mav::mav(environment_model &em, const Vector3f &position):
     goal_reached_threshold_(0.5)
 {
     behaviour_controller_ = behaviour_controller::ptr(new behaviour_controller(*this));
+    stop();
 }
 
 mav::~mav(){}
@@ -77,32 +78,36 @@ void mav::draw()
     behaviour_controller_->draw();
     sensor_.draw();
 
-    auto fp = sensor_.get_rect(position_);
+    if(!stop_)
+    {
+        auto fp = sensor_.get_rect(position_);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glLineWidth(1.0);
-    glColor3f(0.4, 0.4, 0.4);
-    glBegin(GL_QUADS);
-    utility::draw_quad(fp);
-    glEnd();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glLineWidth(1.0);
+        glColor3f(0.4, 0.4, 0.4);
+        glBegin(GL_QUADS);
+        utility::draw_quad(fp, 0.2);
+        glEnd();
 
-    glColor3f(0,0,1);
-    glLineWidth(2);
-    double l=0.25 * active_survey_param::area_width/32.0;
-    glBegin(GL_LINES);
-    utility::gl_vertex3f(position_-l*Vector3f(1,0,0));
-    utility::gl_vertex3f(position_+l*Vector3f(1,0,0));
-    utility::gl_vertex3f(position_-l*Vector3f(0,1,0));
-    utility::gl_vertex3f(position_+l*Vector3f(0,1,0));
-    glEnd();
+        glColor3f(0,0,1);
+        glLineWidth(2);
+        double l=0.25 * active_survey_param::area_width/32.0;
+        glBegin(GL_LINES);
+        utility::gl_vertex3f(position_-l*Vector3f(1,0,0));
+        utility::gl_vertex3f(position_+l*Vector3f(1,0,0));
+        utility::gl_vertex3f(position_-l*Vector3f(0,1,0));
+        utility::gl_vertex3f(position_+l*Vector3f(0,1,0));
+        glEnd();
+    }
 
-    glLineWidth(2);
-    glColor3f(0.6, 0.6, 1);
+
+    glLineWidth(4);
+    glColor3f(0.1,1, 0.1);
     glBegin(GL_LINES);
     for(size_t i=0; i+1<positions_.size(); i++)
     {
-        if(fabs(active_survey_param::sensing_height-positions_[i][2]) < 0.1 &&
-                fabs(active_survey_param::sensing_height-positions_[i+1][2]) < 0.1)
+        if(fabs(active_survey_param::sensing_height-positions_[i][2]) < 0.5 &&
+                fabs(active_survey_param::sensing_height-positions_[i+1][2]) < 0.5)
         {
             utility::gl_vertex3f(positions_[i]);
             utility::gl_vertex3f(positions_[i+1]);
@@ -111,20 +116,67 @@ void mav::draw()
     glEnd();
 
     glPushAttrib(GL_ENABLE_BIT);
-    glLineStipple(1, 0xAA);
+    glLineStipple(1, 0x5F);
     glEnable(GL_LINE_STIPPLE);
+
+    glLineWidth(4);
+    glColor3f(1, 0.4, 0.4);
+
     glBegin(GL_LINES);
     for(size_t i=0; i+1<positions_.size(); i++)
     {
         if(fabs(active_survey_param::sensing_height-positions_[i][2]) > 0.5 ||
                 fabs(active_survey_param::sensing_height-positions_[i+1][2]) > 0.5)
         {
+            if(fabs(active_survey_param::sensing_height-positions_[i][2]) < 0.5)
+            {
+                glColor3f(0.1,1, 0.1);
+            }
+            else
+            {
+                glColor3f(1, 0.4, 0.4);
+            }
+
             utility::gl_vertex3f(positions_[i]);
+
+            if(fabs(active_survey_param::sensing_height-positions_[i+1][2]) < 0.5)
+            {
+                glColor3f(0.1,1, 0.1);
+            }
+            else
+            {
+                glColor3f(1, 0.4, 0.4);
+
+            }
             utility::gl_vertex3f(positions_[i+1]);
         }
     }
     glEnd();
     glPopAttrib();
+
+
+    glColor3f(1,1,0);
+    glPointSize(10);
+    glBegin(GL_POINTS);
+    for(size_t i=0; i+1<positions_.size(); i++)
+    {
+        if(fabs(active_survey_param::sensing_height-positions_[i][2]) > 0.5 ||
+                fabs(active_survey_param::sensing_height-positions_[i+1][2]) > 0.5)
+        {
+            if(fabs(active_survey_param::sensing_height-positions_[i][2]) < 0.5)
+            {
+                utility::gl_vertex3f(positions_[i], 0.5);
+            }
+
+            if(fabs(active_survey_param::sensing_height-positions_[i+1][2]) < 0.5)
+            {
+                utility::gl_vertex3f(positions_[i+1], 0.5);
+            }
+        }
+    }
+    glEnd();
+
+
 
 }
 

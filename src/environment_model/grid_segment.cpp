@@ -87,12 +87,12 @@ void grid_segment::grow(std::function<grid_segment::ptr(grid_cell_base::label)> 
 void grid_segment::merge_with_segment(ptr u, ptr merging_segment, graph::ptr &component)
 {
     component->merge_nodes(std::static_pointer_cast<graph_node>(u),
-                          std::static_pointer_cast<graph_node>(merging_segment));
+                           std::static_pointer_cast<graph_node>(merging_segment));
 
     merging_segment->set_label(u->get_label());
 
     for(auto it=merging_segment->cells_.begin();
-         it!=merging_segment->cells_.end();++it)
+        it!=merging_segment->cells_.end();++it)
         u->cells_.insert(*it);
 
     merging_segment->clear();
@@ -209,46 +209,46 @@ void grid_segment::find_approximate_polygon()
 
     auto minit = std::min_element(nds.begin(), nds.end(), [](grid_cell::ptr x, grid_cell::ptr y)-> bool
     {
-        grid_index xi,yi;
-        xi = x->get_index();
-        yi = y->get_index();
-        if(xi[1] < yi[1]) return true;
-        if(xi[1] > yi[1]) return false;
-        return (xi[0] < yi[0]);
-    });
+            grid_index xi,yi;
+            xi = x->get_index();
+            yi = y->get_index();
+            if(xi[1] < yi[1]) return true;
+    if(xi[1] > yi[1]) return false;
+    return (xi[0] < yi[0]);
+});
 
-    approximate_poly_cells_.clear();
-    approximate_poly_cells_.push_back(*minit);
-    nds.erase(minit);
+approximate_poly_cells_.clear();
+approximate_poly_cells_.push_back(*minit);
+nds.erase(minit);
 
-    // sort the boundary nodes
-    while(!nds.empty())
+// sort the boundary nodes
+while(!nds.empty())
+{
+    auto cell = approximate_poly_cells_.back();
+    size_t i=0;
+    for(; i<8; i++)
     {
-        auto cell = approximate_poly_cells_.back();
-        size_t i=0;
-        for(; i<8; i++)
-        {
-            auto nb = grid_.get_neighbour_cell_8(cell, (i+1)%8);
-            if(!nb)
-                continue;
+        auto nb = grid_.get_neighbour_cell_8(cell, (i+1)%8);
+        if(!nb)
+            continue;
 
-            auto nb_it = nds.find(nb);
-            if(nb_it != nds.end())
-            {
-                approximate_poly_cells_.push_back(*nb_it);
-                nds.erase(nb_it);
-                break;
-            }
-        }
-
-        if(i>=8 && !nds.empty())
+        auto nb_it = nds.find(nb);
+        if(nb_it != nds.end())
         {
-            //ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %u c: %.2f %.2f %.2f", get_label(), get_color()[0], get_color()[1], get_color()[2]);
+            approximate_poly_cells_.push_back(*nb_it);
+            nds.erase(nb_it);
             break;
         }
     }
 
-    //ROS_INFO("approx polygon for segment 1 ...");
+    if(i>=8 && !nds.empty())
+    {
+        //ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %u c: %.2f %.2f %.2f", get_label(), get_color()[0], get_color()[1], get_color()[2]);
+        break;
+    }
+}
+
+//ROS_INFO("approx polygon for segment 1 ...");
 
 //    std::vector<grid_cell::ptr> simplified_approx_polygon;
 //    simplified_approx_polygon.push_back(approximate_poly_cells_.front());
@@ -294,9 +294,9 @@ void grid_segment::find_approximate_polygon()
 //    approximate_poly_cells_.clear();
 //    copy(simplified_approx_polygon.begin(), simplified_approx_polygon.end(), back_inserter(approximate_poly_cells_));
 
-    approximate_polygon_.clear();
-    for(auto it=approximate_poly_cells_.begin(); it !=approximate_poly_cells_.end(); it++)
-      approximate_polygon_.push_back((*it)->get_center());
+approximate_polygon_.clear();
+for(auto it=approximate_poly_cells_.begin(); it !=approximate_poly_cells_.end(); it++)
+approximate_polygon_.push_back((*it)->get_center());
 }
 
 void grid_segment::find_convexhull()
@@ -367,21 +367,21 @@ void grid_segment::find_convexhull()
             const auto &p2 = convexhull_.back();
 
             const auto next = std::max_element(approximate_polygon.begin(), approximate_polygon.end(),
-                                         [&p1, &p2](const Vector2f &v, const Vector2f &u)
-              {
-//                  if(utility::close_enough(p2,u))
-//                  {
-//                      ROS_INFO("CH compare!!!");
-//                      return false;
-//                  }
-//                  else if(utility::close_enough(p2,v))
-//                  {
-//                      ROS_INFO("CH compare!!!");
-//                      return true;
-//                  }
+                                               [&p1, &p2](const Vector2f &v, const Vector2f &u)
+            {
+                //                  if(utility::close_enough(p2,u))
+                //                  {
+                //                      ROS_INFO("CH compare!!!");
+                //                      return false;
+                //                  }
+                //                  else if(utility::close_enough(p2,v))
+                //                  {
+                //                      ROS_INFO("CH compare!!!");
+                //                      return true;
+                //                  }
 
-                  return utility::angle(p1, p2, v) < utility::angle(p1, p2, u);
-              });
+                return utility::angle(p1, p2, v) < utility::angle(p1, p2, u);
+            });
 
             if(next != approximate_polygon.end())
             {
@@ -412,9 +412,9 @@ void grid_segment::find_convexhull()
         //ROS_INFO("Convexhull l: %u #before_simplification: %ld", get_label(), convexhull_.size());
         if(convexhull_.size() == 2)
         {
-//            ROS_WARN("P1: %.1f %.1f P2: %.1f %.1f",
-//                     convexhull_[0][0], convexhull_[0][1],
-//                     convexhull_[1][0], convexhull_[1][1]);
+            //            ROS_WARN("P1: %.1f %.1f P2: %.1f %.1f",
+            //                     convexhull_[0][0], convexhull_[0][1],
+            //                     convexhull_[1][0], convexhull_[1][1]);
         }
         else
         {
@@ -487,7 +487,7 @@ bool grid_segment::find_base_edge(size_t &first_index, size_t &second_index, dou
 
             double h = utility::point_to_line_distance(convexhull_[i],
                                                        convexhull_[(i+1)%size],
-                                                       convexhull_[j]);
+                    convexhull_[j]);
 
             max_height = (max_height < h) ? h : max_height;
         }
@@ -501,8 +501,8 @@ bool grid_segment::find_base_edge(size_t &first_index, size_t &second_index, dou
     }
 
     double sd = utility::point_to_line_signed_distance(convexhull_[min_height_index],
-                                                convexhull_[(min_height_index+1)%size],
-                                                convexhull_[(min_height_index+2)%size]);
+                                                       convexhull_[(min_height_index+1)%size],
+            convexhull_[(min_height_index+2)%size]);
     if(sd > 0)
     {
         first_index = min_height_index;
@@ -555,7 +555,7 @@ bool grid_segment::plan_coverage_path(const double &inter_lap_distance, const do
     coverage_path.push_back(en0);
 
     double n =-1;
-    while(convexhull_height / inter_lap_distance > n)
+    while(n <= ceil((convexhull_height+ 2*active_survey_param::sensing_height) / inter_lap_distance))
     {
         n+=1.0;
 
@@ -610,14 +610,22 @@ bool grid_segment::plan_coverage_path(const double &inter_lap_distance, const do
                 }
             }
         }
+        else if(intersections.size() == 1)
+        {
+
+        }
         else
         {
             // no intersection !!!!!!
         }
-      }
+    }
 
     if(coverage_path.size() > 2)
     {
+        for(auto &p: coverage_path)
+        {
+            p -= 0.3*(offset0) * sweep_dir;
+        }
         coverage_path.erase(coverage_path.begin());
         coverage_path.erase(coverage_path.begin());
     }
@@ -742,103 +750,117 @@ bool grid_segment::is_uncertain() const
 
 void grid_segment::draw()
 {
-    glLineWidth(3);
+    glLineWidth(2);
     utility::gl_color(get_color());
 
-    if(approximate_polygon_.size() >= 3)
+    if(true || active_survey_param::non_ros::cell_drawing_mode==5)
     {
-        double dc = 1;
-        if(!approximate_polygon_.empty())
-            dc = 1.0/approximate_polygon_.size();
-        double i = 0;
-
-        glBegin(GL_LINES);
-        for(auto it=begin_approx_poly(); it!=end_approx_poly(); ++it)
+        if(convexhull_.size() >= 3)
         {
-            glColor3f(i*dc, 0, 1);
-            utility::gl_vertex3f(*it, 0.3);
-            utility::gl_vertex3f(*(it+1!=end_approx_poly()?it+1:begin_approx_poly()), 0.3);
-            i+=1.0;
+            double dc = 1;
+            if(!convexhull_.empty())
+                dc = 1.0/convexhull_.size();
+            double i = 0;
+
+            glBegin(GL_LINES);
+            for(auto it=begin_convexhull(); it!=end_convexhull(); ++it)
+            {
+                //glColor3f(i*dc, 0, 1);
+                utility::gl_vertex3f(*it, 0.3);
+                utility::gl_vertex3f(*(it+1!=end_convexhull()?it+1:begin_convexhull()), 0.3);
+                i+=1.0;
+            }
+            glEnd();
         }
-        glEnd();
     }
 
-//    glPointSize(4);
+
+    //    glPointSize(4);
+    //    glBegin(GL_POINTS);
+    //    for(auto cell:boundary_cells_)
+    //        utility::gl_vertex3f(cell->get_center(), 0.4);
+    //    glEnd();
+
+//    glColor4f(1, 1,1, 0.8);
+//    glPointSize(10);
 //    glBegin(GL_POINTS);
-//    for(auto cell:boundary_cells_)
+//    for(auto cell:uncertain_boundary_)
 //        utility::gl_vertex3f(cell->get_center(), 0.4);
 //    glEnd();
 
-    glColor4f(1, 1,1, 0.8);
-    glPointSize(10);
-    glBegin(GL_POINTS);
-    for(auto cell:uncertain_boundary_)
-        utility::gl_vertex3f(cell->get_center(), 0.4);
-    glEnd();
-
-    if(is_valid())
-    {
-        utility::gl_color(cross_color_);
-        if(is_uncertain())
-            glLineWidth(8);
-        else
-            glLineWidth(3);
-
-        glBegin(GL_LINES);
-        utility::draw_cross(sudo_center_, 0.5);
-        glEnd();
-
-        if(delayed_segment_)
+        if(is_valid())
         {
-            glColor3f(0.5, 0.5,1);
-            glLineWidth(2);
-            glBegin(GL_LINES);
-            utility::gl_vertex3f(delayed_segment_->get_sudo_center(), 0.51);
-            utility::gl_vertex3f(sudo_center_, 0.51);
-            glEnd();
+
+//            utility::gl_color(cross_color_);
+//            if(is_uncertain())
+//                glLineWidth(8);
+//            else
+//                glLineWidth(3);
+
+//            glBegin(GL_LINES);
+//            utility::draw_cross(sudo_center_, 0.5);
+//            glEnd();
+
+//            if(delayed_segment_)
+//            {
+//                glColor3f(0.5, 0.5,1);
+//                glLineWidth(2);
+//                glBegin(GL_LINES);
+//                utility::gl_vertex3f(delayed_segment_->get_sudo_center(), 0.51);
+//                utility::gl_vertex3f(sudo_center_, 0.51);
+//                glEnd();
+//            }
+
+//            if(is_uncertain())
+//            {
+//                utility::gl_color(cross_color_);
+//                glLineWidth(1);
+//                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//                glBegin(GL_POLYGON);
+//                utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
+//                glEnd();
+//            }
         }
 
-        if(is_uncertain())
-        {
-            utility::gl_color(cross_color_);
-            glLineWidth(1);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glBegin(GL_POLYGON);
-            utility::draw_circle(sudo_center_, 3*active_survey_param::coarse_coverage_height, 0.52);
-            glEnd();
-        }
-    }
-
-//    if(is_valid())
-//    {
-//        glColor3f(0,1,0);
-//        glLineWidth(1);
-//        glBegin(GL_LINES);
-//        for(size_t i=0; i+1<coverage_path_.size();i++)
+//        if(is_valid())
 //        {
-//            utility::gl_vertex3f(coverage_path_[i]);
-//            utility::gl_vertex3f(coverage_path_[i+1]);
-//            //glColor3f(1,0,0);
+//            glColor3f(0,1,0);
+//            glLineWidth(2);
+//            glBegin(GL_LINES);
+//            for(size_t i=0; i+1<coverage_path_.size();i++)
+//            {
+//                utility::gl_vertex3f(coverage_path_[i]);
+//                utility::gl_vertex3f(coverage_path_[i+1]);
+//                //glColor3f(1,0,0);
+//            }
+//            glEnd();
+
+//	    glColor3f(1,1,0);
+//            glPointSize(3);
+//            glBegin(GL_POINTS);
+//            for(size_t i=0; i<coverage_path_.size();i++)
+//            {
+//                utility::gl_vertex3f(coverage_path_[i]+Vector3f(0,0,0.1));
+//            }
+//            glEnd();
 //        }
-//        glEnd();
-//    }
 
-//    glPointSize(6);
-//    glBegin(GL_POINTS);
+    //    glPointSize(6);
+    //    glBegin(GL_POINTS);
 
-//    dc=1;
-//    if(!convexhull_.empty())
-//        dc = 1.0/convexhull_.size();
-//    i=1.0;
+    //    dc=1;
+    //    if(!convexhull_.empty())
+    //        dc = 1.0/convexhull_.size();
+    //    i=1.0;
 
-//    for(auto it=begin_convexhull(); it!= end_convexhull(); it++)
-//    {
-//        glColor3f(i*dc, 1,0);
-//        utility::gl_vertex3f(*it, 0.3);
-//        i+=1.0;
-//    }
+    //    for(auto it=begin_convexhull(); it!= end_convexhull(); it++)
+    //    {
+    //        glColor3f(i*dc, 1,0);
+    //        utility::gl_vertex3f(*it, 0.3);
+    //        i+=1.0;
+    //    }
 
-//    glEnd();
+    //    glEnd();
 }
 
 }

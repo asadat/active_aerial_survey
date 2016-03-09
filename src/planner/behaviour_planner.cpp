@@ -97,7 +97,7 @@ waypoint::ptr behaviour_planner::get_next_waypoint()
 template<typename cell_iterator>
 void behaviour_planner::update_grid_gp(const cell_iterator &begin_it, const cell_iterator &end_it, bool covered_cells)
 {
-    std::clock_t last_clk = std::clock();
+    //std::clock_t last_clk = std::clock();
 
     for(auto it =begin_it; it!=end_it; ++it)
     {        
@@ -114,7 +114,7 @@ void behaviour_planner::update_grid_gp(const cell_iterator &begin_it, const cell
     }
 
 
-    ROS_WARN("\t\t\t gp update time: %.2f", (std::clock()-last_clk)/((double)CLOCKS_PER_SEC));
+ //   ROS_WARN("\t\t\t gp update time: %.2f", (std::clock()-last_clk)/((double)CLOCKS_PER_SEC));
 
 }
 
@@ -151,6 +151,7 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
         else
             two_stage(reached_waypoint);
 
+       // mav_.stop();
 
         float ptime = (std::clock()-last_clk)/((double)CLOCKS_PER_SEC);
         if(ptime>0.01)
@@ -245,7 +246,7 @@ void behaviour_planner::update_segments(const cell_iterator &begin_it, const cel
 
 void behaviour_planner::draw()
 {
-    if(!plan_.empty())
+    if(false&&!plan_.empty())
     {
         glLineWidth(3);
         glColor3f(0.1,0.7, 0.3);
@@ -294,6 +295,7 @@ void behaviour_planner::plan_sensing_tour(std::vector<grid_segment::ptr> &segmen
                                           const double &available_flight_time, const waypoint::ptr &cur_waypoint,
                                           const waypoint::ptr &reached_waypoint, plan &cur_plan)
 {
+
     if(segments.empty())
         return;
 
@@ -426,11 +428,8 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
             utility::distance_squared(seg_coverage_path.back(), pos))
         std::reverse(seg_coverage_path.begin(), seg_coverage_path.end());
 
-    while(coverage_plan.cost(pos, cur_plan) < available_flight_time)
+    while(!seg_coverage_path.empty())
     {
-        if(seg_coverage_path.empty())
-            break;
-
         waypoint::ptr first_waypoint = std::make_shared<waypoint>(seg_coverage_path.front());
         seg_coverage_path.erase(seg_coverage_path.begin());
 
@@ -438,7 +437,18 @@ bool behaviour_planner::construct_coverage_plan(grid_segment::ptr segment, const
         first_waypoint->set_type(waypoint::type::HIGH_RESOLUTION);
 
         coverage_plan.push_back(first_waypoint);
+
+        if(coverage_plan.cost(pos, cur_plan) > available_flight_time)
+        {
+            if(seg_coverage_path.size()+1 < orig_lm_size)
+            {
+                coverage_plan.pop_last_waypoint();
+            }
+            break;
+        }
+
     }
+
 
     if(orig_lm_size == seg_coverage_path.size()+1)
     {
@@ -490,6 +500,9 @@ void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
     components_.clear();
     segments.clear();
     components_mutex_.unlock();
+
+    //ROS_INFO("AVAILABLE_TIME: >>>>>> %.1f   %.1f", get_available_time_(), plan_.cost(last_sensing_position_, plan()));
+
 }
 
 void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
@@ -516,7 +529,7 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
         seg->get_uncertain_neighbour_cells(std::back_inserter(uncertain_cells_));
     }
 
-    const double dist = 3*active_survey_param::coarse_coverage_height;
+    const double dist = 2*active_survey_param::coarse_coverage_height;
     for(auto &sp:segments_)
     {
         grid_segment::ptr seg = sp.second;
@@ -553,9 +566,45 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
                 segments.push_back(seg);
             }
         }
-        else
+    }
+
+    if(!last_survey_wp)
+    {
+        //second chance
+        for(auto &sp: segments_)
         {
-            //ROS_INFO("ignoring segment %u area: %ld", seg->get_label(), seg->get_cell_count());
+            grid_segment::ptr seg = sp.second;
+
+            if(seg->is_valid() && !seg->get_ignored())
+            {
+                if(seg->is_uncertain() && utility::projected_distance_squared(seg->get_sudo_center(),
+                                                                              last_sensing_position_) < active_survey_param::coarse_coverage_height
+                                                                              && utility::random_number(0,1) < seg->get_segment_value()/(10.0*active_survey_param::coarse_coverage_height*
+                                                                                                                                         active_survey_param::coarse_coverage_height))
+                {
+
+                    ROS_INFO("******** CHANGED MIND ******");
+                    seg->plan_coverage_path(2*active_survey_param::sensing_height,
+                                            active_survey_param::sensing_height);
+
+                    segments.push_back(seg);
+                    for(auto &sp_dp: segments_)
+                    {
+                       grid_segment::ptr sp_d = sp_dp.second;
+
+                       if(sp_d->is_valid() && !sp_d->get_ignored() && sp_d->get_delayed_segment() == seg)
+                       {
+                           sp_d->plan_coverage_path(2*active_survey_param::sensing_height,
+                                                   active_survey_param::sensing_height);
+
+                           segments.push_back(sp_d);
+
+                       }
+                    }
+
+
+                }
+            }
         }
     }
 
@@ -583,7 +632,8 @@ void behaviour_planner::semi_greedy(const waypoint::ptr &reached_waypoint)
         }
     }
 
-    ROS_INFO_THROTTLE(1.0, "Covered cells: %ld", covered_cells_.size());
+   //ROS_INFO("AVAILABLE_TIME: >>>>>> %.1f   %.1f", get_available_time_(), plan_.cost(last_sensing_position_, plan()));
+   // ROS_INFO_THROTTLE(1.0, "Covered cells: %ld", covered_cells_.size());
 }
 
 void behaviour_planner::two_stage(const waypoint::ptr &reached_waypoint)

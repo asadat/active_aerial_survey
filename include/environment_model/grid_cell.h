@@ -51,12 +51,17 @@ public:
     inline void set_estimated_value(const double &ev){estimated_value_=ev;}
     inline double get_variance() const {return variance_;}
     inline void set_variance(const double &variance){variance_=variance;}
+    inline void set_sensed_time(const double &sensed_time){sensed_time_=(sensed_time<sensed_time_?sensed_time:sensed_time_);}
+    inline double get_sensed_time() const {return sensed_time_;}
+
+    inline bool is_true_target(const double& thr) const { return ground_truth_value_ >= thr;}
 
     int flags_;
 
 protected:
     grid_cell_base():flags_(0), variance_(1), label_(0),
-        approx_label_(0), checked_for_skinny_(false), sensed_(false), covered_(false), ignored_(false) {}
+        approx_label_(0), checked_for_skinny_(false), sensed_time_(9e5),
+        sensed_(false), covered_(false), ignored_(false) {}
 
     double ground_truth_value_;
     double estimated_value_;
@@ -64,6 +69,7 @@ protected:
     label label_;
     label approx_label_;
     bool checked_for_skinny_;
+    double sensed_time_;
 
     /*
      * This means that the cell has been sensed
