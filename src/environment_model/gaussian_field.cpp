@@ -12,7 +12,7 @@ shared_ptr<gaussian_field> gaussian_field::instance_;
 gaussian_field::gaussian_field():GaussianProcess(2, "CovSum ( CovSEiso, CovNoise)")
 {
     Eigen::VectorXd params(covf().get_param_dim());
-    params << log(16), log(2), log(active_survey_param::gp_sigma);
+    params << log(9), log(2), log(active_survey_param::gp_sigma);
     covf().set_loghyper(params);
 }
 
@@ -23,7 +23,7 @@ gaussian_field::~gaussian_field()
 
 void gaussian_field::draw()
 {    
-    return;
+
     auto s = this->sampleset->size();
     glPointSize(2);
     glColor3f(1,0.5,0);

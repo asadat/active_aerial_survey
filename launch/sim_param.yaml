@@ -1,7 +1,7 @@
 simulation: True
 visualization: True
 FOV: 1.57
-min_footprint: 2
+min_footprint: 1
 speed: 70
 policy: greedy
 area_width: 100.0
@@ -17,7 +17,7 @@ prior_file_name: priors/prior10.jpg
 time_limit: 1800
 turning_time: 5.0
 random_seed: 1457135897
-gp_sigma: 0.1
+gp_sigma: 0.3
 exploitation_rate: 10.005
 coarse_coverage_height: 10.0
 sensing_height: 2.0
