@@ -3,7 +3,7 @@ visualization: True
 FOV: 1.57
 min_footprint: 1
 speed: 70
-policy: greedy
+policy: semi_greedy
 area_width: 100.0
 area_height: 100.0
 area_rotation: 0.0
