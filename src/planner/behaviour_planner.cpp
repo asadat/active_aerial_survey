@@ -473,6 +473,8 @@ void behaviour_planner::greedy(const waypoint::ptr &reached_waypoint)
         seg->plan_coverage_path(2*active_survey_param::sensing_height,
                                 active_survey_param::sensing_height);
 
+
+
         if(seg->is_valid() && !seg->get_ignored())
             segments.push_back(seg);
         else
