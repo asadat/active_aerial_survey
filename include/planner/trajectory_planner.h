@@ -218,7 +218,6 @@ public:
         }
 
         coverage_path_cost += (traj.size()-2)* active_survey_param::turning_time;
-
         return true;
     }
 

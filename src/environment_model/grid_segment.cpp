@@ -210,99 +210,159 @@ void grid_segment::find_approximate_polygon()
 
     auto minit = std::min_element(nds.begin(), nds.end(), [](grid_cell::ptr x, grid_cell::ptr y)-> bool
     {
-            grid_index xi,yi;
-            xi = x->get_index();
-            yi = y->get_index();
-            if(xi[1] < yi[1]) return true;
-    if(xi[1] > yi[1]) return false;
-    return (xi[0] < yi[0]);
-});
+        grid_index xi,yi;
+        xi = x->get_index();
+        yi = y->get_index();
+        if(xi[1] < yi[1]) return true;
+        if(xi[1] > yi[1]) return false;
+        return (xi[0] < yi[0]);
+    });
 
-approximate_poly_cells_.clear();
-approximate_poly_cells_.push_back(*minit);
-nds.erase(minit);
+    approximate_poly_cells_.clear();
+    approximate_poly_cells_.push_back(*minit);
+    nds.erase(minit);
 
-// sort the boundary nodes
-while(!nds.empty())
-{
-    auto cell = approximate_poly_cells_.back();
-    size_t i=0;
-    for(; i<8; i++)
+    // sort the boundary nodes
+    while(!nds.empty())
     {
-        auto nb = grid_.get_neighbour_cell_8(cell, (i+1)%8);
-        if(!nb)
-            continue;
-
-        auto nb_it = nds.find(nb);
-        if(nb_it != nds.end())
+        auto cell = approximate_poly_cells_.back();
+        size_t i=0;
+        for(; i<8; i++)
         {
-            approximate_poly_cells_.push_back(*nb_it);
-            nds.erase(nb_it);
+            auto nb = grid_.get_neighbour_cell_8(cell, (i+1)%8);
+            if(!nb)
+                continue;
+
+            auto nb_it = nds.find(nb);
+            if(nb_it != nds.end())
+            {
+                approximate_poly_cells_.push_back(*nb_it);
+                nds.erase(nb_it);
+                break;
+            }
+        }
+
+        if(i>=8 && !nds.empty())
+        {
+            //ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %u c: %.2f %.2f %.2f", get_label(), get_color()[0], get_color()[1], get_color()[2]);
             break;
         }
     }
 
-    if(i>=8 && !nds.empty())
+    //ROS_INFO("approx polygon for segment 1 ...");
+
+    std::vector<grid_cell::ptr> simplified_approx_polygon;
+    simplified_approx_polygon.push_back(approximate_poly_cells_.front());
+
+    for(auto it = approximate_poly_cells_.begin(); it!= approximate_poly_cells_.end();)
     {
-        //ROS_ERROR("incomplete approximate polygon!!!!!!!!!!!!! %u c: %.2f %.2f %.2f", get_label(), get_color()[0], get_color()[1], get_color()[2]);
-        break;
+        const double mean_dist_threshold = active_survey_param::min_footprint*0.5;
+        for(auto it_end = it+1; it_end != approximate_poly_cells_.end(); it_end++)
+        {
+            auto it_next = it_end+1;
+            if(it_next == approximate_poly_cells_.end())
+            {
+                simplified_approx_polygon.push_back(*it_end);
+                it = it_next;
+                break;
+            }
+            else
+            {
+                double mean_dist = 0;
+                double sz = 0;
+                for(auto it_tmp=it+1; it_tmp!=it_next; it_tmp++)
+                {
+                    sz+=1;
+                    mean_dist += utility::point_to_line_distance((*it)->get_center(), (*it_next)->get_center(), (*it_tmp)->get_center());
+                }
+
+                if(sz < 1.0)
+                    sz = 1.0;
+
+                mean_dist /= sz;
+
+                if(mean_dist > mean_dist_threshold)
+                {
+                    //ROS_INFO("************ mean_dist: %f", mean_dist);
+                    it = it_end;
+                    simplified_approx_polygon.push_back(*it_end);
+                    break;
+                }
+            }
+        }
     }
+
+    approximate_poly_cells_.clear();
+    copy(simplified_approx_polygon.begin(), simplified_approx_polygon.end(), back_inserter(approximate_poly_cells_));
+
+    approximate_polygon_.clear();
+    for(auto it=approximate_poly_cells_.begin(); it !=approximate_poly_cells_.end(); it++)
+    approximate_polygon_.push_back((*it)->get_center());
 }
 
-//ROS_INFO("approx polygon for segment 1 ...");
+void grid_segment::find_nonconvex_parts()
+{
+    non_convex_parts_.clear();
 
-//    std::vector<grid_cell::ptr> simplified_approx_polygon;
-//    simplified_approx_polygon.push_back(approximate_poly_cells_.front());
+    if(!is_valid())
+        return;
 
-//    for(auto it = approximate_poly_cells_.begin(); it!= approximate_poly_cells_.end();)
-//    {
-//        const double mean_dist_threshold = active_survey_param::min_footprint*0.5;
-//        for(auto it_end = it+1; it_end != approximate_poly_cells_.end(); it_end++)
-//        {
-//            auto it_next = it_end+1;
-//            if(it_next == approximate_poly_cells_.end())
-//            {
-//                simplified_approx_polygon.push_back(*it_end);
-//                it = it_next;
-//                break;
-//            }
-//            else
-//            {
-//                double mean_dist = 0;
-//                double sz = 0;
-//                for(auto it_tmp=it+1; it_tmp!=it_next; it_tmp++)
-//                {
-//                    sz+=1;
-//                    mean_dist += utility::point_to_line_distance((*it)->get_center(), (*it_next)->get_center(), (*it_tmp)->get_center());
-//                }
+    auto cit = begin_convexhull();
+    auto prev_cit = cit;
+    int n=0;
+    int nn=0;
 
-//                if(sz < 1.0)
-//                    sz = 1.0;
+    Vector2f peak=*cit;
 
-//                mean_dist /= sz;
+    //ROS_INFO("first D: %.2f", utility::distance_squared(*begin_approx_poly(),*begin_convexhull()));
+    for(auto it =begin_approx_poly(); it!= end_approx_poly(); ++it)
+    {
+        //ROS_INFO("CONVX: %.1f %.1f", (*cit)[0], (*cit)[1]);
 
-//                if(mean_dist > mean_dist_threshold)
-//                {
-//                    //ROS_INFO("************ mean_dist: %f", mean_dist);
-//                    it = it_end;
-//                    simplified_approx_polygon.push_back(*it_end);
-//                    break;
-//                }
-//            }
-//        }
-//    }
+        if(utility::close_enough(*it, *cit))
+        {
+            if(nn>0)
+            {
+                n++;
+                peaks_.push_back(peak);
+            }
+            nn=0;
 
-//    approximate_poly_cells_.clear();
-//    copy(simplified_approx_polygon.begin(), simplified_approx_polygon.end(), back_inserter(approximate_poly_cells_));
+            prev_cit = cit;
+            ++cit;
 
-approximate_polygon_.clear();
-for(auto it=approximate_poly_cells_.begin(); it !=approximate_poly_cells_.end(); it++)
-approximate_polygon_.push_back((*it)->get_center());
+            if(cit == end_convexhull())
+                cit = begin_convexhull();
+        }
+        else
+        {
+            nn++;
+
+            if(nn>1)
+            {
+                if(utility::point_to_line_distance(*cit, *prev_cit, peak) <
+                        utility::point_to_line_distance(*cit, *prev_cit, *it))
+                    peak = *it;
+            }
+            else
+            {
+                peak = *it;
+            }
+            //ROS_INFO("D: %.2f", utility::distance_squared(*it,*cit));
+            non_convex_parts_.insert(std::pair<int, Vector2f>(n, *it));
+        }
+    }
+
+    if(nn>0)
+    {
+        peaks_.push_back(peak);
+    }
 }
 
 void grid_segment::find_convexhull()
 {
     polygon_convexhull::find_convexhull(approximate_polygon_, convexhull_, is_line_);
+    find_nonconvex_parts();
 }
 
 //void grid_segment::find_convexhull()
@@ -768,15 +828,15 @@ void grid_segment::draw()
     {
         if(convexhull_.size() >= 3)
         {
-//            double dc = 1;
-//            if(!convexhull_.empty())
-//                dc = 1.0/convexhull_.size();
+            double dc = 1;
+            if(!convexhull_.empty())
+                dc = 1.0/convexhull_.size();
             double i = 0;
 
             glBegin(GL_LINES);
             for(auto it=begin_convexhull(); it!=end_convexhull(); ++it)
             {
-                //glColor3f(i*dc, 0, 1);
+                glColor3f(i*dc, 0, 1);
                 utility::gl_vertex3f(*it, 0.3);
                 utility::gl_vertex3f(*(it+1!=end_convexhull()?it+1:begin_convexhull()), 0.3);
                 i+=1.0;
@@ -785,6 +845,26 @@ void grid_segment::draw()
         }
     }
 
+    if(true || active_survey_param::non_ros::cell_drawing_mode==5)
+    {
+        if(approximate_polygon_.size() >= 3)
+        {
+            double dc = 1;
+            if(!approximate_polygon_.empty())
+                dc = 1.0/approximate_polygon_.size();
+            double i = 0;
+
+            glBegin(GL_LINES);
+            for(auto it=begin_approx_poly(); it!=end_approx_poly(); ++it)
+            {
+                glColor3f(i*dc, 0, 1);
+                utility::gl_vertex3f(*it, 0.3);
+                utility::gl_vertex3f(*(it+1!=end_approx_poly()?it+1:begin_approx_poly()), 0.3);
+                i+=1.0;
+            }
+            glEnd();
+        }
+    }
 
     //    glPointSize(4);
     //    glBegin(GL_POINTS);
@@ -792,86 +872,132 @@ void grid_segment::draw()
     //        utility::gl_vertex3f(cell->get_center(), 0.4);
     //    glEnd();
 
-//    glColor4f(1, 1,1, 0.8);
-//    glPointSize(10);
-//    glBegin(GL_POINTS);
-//    for(auto cell:uncertain_boundary_)
-//        utility::gl_vertex3f(cell->get_center(), 0.4);
-//    glEnd();
-
-        if(is_valid())
-        {
-
-//            utility::gl_color(cross_color_);
-//            if(is_uncertain())
-//                glLineWidth(8);
-//            else
-//                glLineWidth(3);
-
-//            glBegin(GL_LINES);
-//            utility::draw_cross(sudo_center_, 0.5);
-//            glEnd();
-
-//            if(delayed_segment_)
-//            {
-//                glColor3f(0.5, 0.5,1);
-//                glLineWidth(2);
-//                glBegin(GL_LINES);
-//                utility::gl_vertex3f(delayed_segment_->get_sudo_center(), 0.51);
-//                utility::gl_vertex3f(sudo_center_, 0.51);
-//                glEnd();
-//            }
-
-//            if(is_uncertain())
-//            {
-//                utility::gl_color(cross_color_);
-//                glLineWidth(1);
-//                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-//                glBegin(GL_POLYGON);
-//                utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
-//                glEnd();
-//            }
-        }
-
-//        if(is_valid())
-//        {
-//            glColor3f(0,1,0);
-//            glLineWidth(2);
-//            glBegin(GL_LINES);
-//            for(size_t i=0; i+1<coverage_path_.size();i++)
-//            {
-//                utility::gl_vertex3f(coverage_path_[i]);
-//                utility::gl_vertex3f(coverage_path_[i+1]);
-//                //glColor3f(1,0,0);
-//            }
-//            glEnd();
-
-//	    glColor3f(1,1,0);
-//            glPointSize(3);
-//            glBegin(GL_POINTS);
-//            for(size_t i=0; i<coverage_path_.size();i++)
-//            {
-//                utility::gl_vertex3f(coverage_path_[i]+Vector3f(0,0,0.1));
-//            }
-//            glEnd();
-//        }
-
-    //    glPointSize(6);
+    //    glColor4f(1, 1,1, 0.8);
+    //    glPointSize(10);
     //    glBegin(GL_POINTS);
+    //    for(auto cell:uncertain_boundary_)
+    //        utility::gl_vertex3f(cell->get_center(), 0.4);
+    //    glEnd();
 
-    //    dc=1;
-    //    if(!convexhull_.empty())
-    //        dc = 1.0/convexhull_.size();
-    //    i=1.0;
+    if(is_valid())
+    {
 
-    //    for(auto it=begin_convexhull(); it!= end_convexhull(); it++)
+        //            utility::gl_color(cross_color_);
+        //            if(is_uncertain())
+        //                glLineWidth(8);
+        //            else
+        //                glLineWidth(3);
+
+        //            glBegin(GL_LINES);
+        //            utility::draw_cross(sudo_center_, 0.5);
+        //            glEnd();
+
+        //            if(delayed_segment_)
+        //            {
+        //                glColor3f(0.5, 0.5,1);
+        //                glLineWidth(2);
+        //                glBegin(GL_LINES);
+        //                utility::gl_vertex3f(delayed_segment_->get_sudo_center(), 0.51);
+        //                utility::gl_vertex3f(sudo_center_, 0.51);
+        //                glEnd();
+        //            }
+
+        //            if(is_uncertain())
+        //            {
+        //                utility::gl_color(cross_color_);
+        //                glLineWidth(1);
+        //                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //                glBegin(GL_POLYGON);
+        //                utility::draw_circle(sudo_center_, 2*active_survey_param::coarse_coverage_height, 0.52);
+        //                glEnd();
+        //            }
+    }
+
+    //        if(is_valid())
+    //        {
+    //            glColor3f(0,1,0);
+    //            glLineWidth(2);
+    //            glBegin(GL_LINES);
+    //            for(size_t i=0; i+1<coverage_path_.size();i++)
+    //            {
+    //                utility::gl_vertex3f(coverage_path_[i]);
+    //                utility::gl_vertex3f(coverage_path_[i+1]);
+    //                //glColor3f(1,0,0);
+    //            }
+    //            glEnd();
+
+    //	    glColor3f(1,1,0);
+    //            glPointSize(3);
+    //            glBegin(GL_POINTS);
+    //            for(size_t i=0; i<coverage_path_.size();i++)
+    //            {
+    //                utility::gl_vertex3f(coverage_path_[i]+Vector3f(0,0,0.1));
+    //            }
+    //            glEnd();
+    //        }
+
+    glPointSize(6);
+    glBegin(GL_POINTS);
+
+    double dc=1;
+    if(!approximate_polygon_.empty())
+        dc = 1.0/approximate_polygon_.size();
+    double i=1.0;
+
+    for(auto it=begin_approx_poly(); it!= end_approx_poly(); it++)
+    {
+        glColor3f(i*dc, 1,0);
+        utility::gl_vertex3f(*it, 0.3);
+        i+=1.0;
+    }
+
+    glEnd();
+
+    //    if(is_valid())
     //    {
-    //        glColor3f(i*dc, 1,0);
-    //        utility::gl_vertex3f(*it, 0.3);
-    //        i+=1.0;
+    //        glPointSize(15);
+    //        glBegin(GL_POINTS);
+    //        glColor3f(1,0,1);
+    //        utility::gl_vertex3f(*begin_approx_poly(), 0.5);
+    //        glEnd();
+
+    //        glPointSize(12);
+    //        glBegin(GL_POINTS);
+    //        glColor3f(1,1,0);
+    //        utility::gl_vertex3f(*begin_approx_poly(), 0.55);
+    //        glEnd();
     //    }
 
-    //    glEnd();
+    glPointSize(15);
+    for(int n=0;;n++)
+    {
+        if(non_convex_parts_.count(n) <=0)
+            break;
+
+        auto range = non_convex_parts_.equal_range(n);
+        glBegin(GL_POINTS);
+        //utility::gl_color(utility::get_altitude_color(n));
+        glColor3f(1,0,0);
+        for(auto it=range.first; it!=range.second; ++it)
+        {
+            utility::gl_vertex3f(it->second, 0.6);
+        }
+        glEnd();
+    }
+
+    glPointSize(11);
+    glColor3f(1,1,0);
+    glBegin(GL_POINTS);
+    for(auto it=non_convex_parts_.begin(); it!=non_convex_parts_.end(); ++it)
+        utility::gl_vertex3f(it->second, 0.7);
+    glEnd();
+
+    glPointSize(9);
+    glColor3f(0,1,0);
+    glBegin(GL_POINTS);
+    for(auto it=peaks_.begin(); it!=peaks_.end(); ++it)
+        utility::gl_vertex3f(*it, 0.8);
+    glEnd();
 }
 
 }

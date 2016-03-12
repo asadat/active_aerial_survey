@@ -101,6 +101,8 @@ void mav::draw()
     }
 
 
+    return;
+
     glLineWidth(4);
     glColor3f(0.1,1, 0.1);
     glBegin(GL_LINES);

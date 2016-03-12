@@ -110,7 +110,7 @@ static double point_to_line_signed_distance(const Vector2f &p1, const Vector2f &
 static bool close_enough(const VectorXf &v, const VectorXf &u,
                          const double &d_threshold=epsilon)
 {
-    return (v-u).squaredNorm() < d_threshold*d_threshold;
+    return distance_squared(v,u) < d_threshold*d_threshold;
 }
 
 static double random_number(const double &a, const double &b)

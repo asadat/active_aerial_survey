@@ -99,6 +99,7 @@ private:
 
     //template<class OutIterator>
     //void find_uncertain_neighbour_cells(OutIterator out_iterator);
+    void find_nonconvex_parts();
 
     grid &grid_;
     std::set<grid_cell::ptr> cells_;
@@ -119,7 +120,8 @@ private:
     polygon approximate_polygon_;
     polygon convexhull_;
 
-
+    std::multimap<int, Vector2f> non_convex_parts_;
+    std::vector<Vector2f> peaks_;
 };
 
 }

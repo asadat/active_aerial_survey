@@ -75,7 +75,7 @@ void grid_cell::draw()
     utility::draw_quad(get_rect());
     glEnd();
 
-    if(ground_truth_value_ > active_survey_param::non_ros::target_threshold)
+    if(false &&ground_truth_value_ > active_survey_param::non_ros::target_threshold)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glColor3f(1,0.95,0.7);

@@ -151,7 +151,7 @@ void behaviour_planner::sensing_callback(std::set<grid_cell::ptr>& covered_cells
         else
             two_stage(reached_waypoint);
 
-       // mav_.stop();
+        mav_.stop();
 
         float ptime = (std::clock()-last_clk)/((double)CLOCKS_PER_SEC);
         if(ptime>0.01)
