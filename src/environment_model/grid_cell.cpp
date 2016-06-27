@@ -23,9 +23,9 @@ void grid_cell::draw()
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glLineWidth(1.0);
     if(active_survey_param::non_ros::cell_drawing_mode == 0)
-        glColor3f(1.5-2*ground_truth_value_,
-                  1.5-2*ground_truth_value_,
-                  1-2*ground_truth_value_);
+        glColor3f(1-0.8*ground_truth_value_,
+                  1-0.8*ground_truth_value_,
+                  1);
     else if(active_survey_param::non_ros::cell_drawing_mode == 1)
     {
         if(!is_covered())
@@ -62,6 +62,8 @@ void grid_cell::draw()
     {
         double dsc = pow(0.999, sensed_time_);
         utility::gl_color(sensed_&&is_target()?Vector3f(1-dsc,1-dsc,1-dsc):Vector3f(1,1,1));
+        //double rt = (sensed_time_>active_survey_param::time_limit)?0:sensed_time_/active_survey_param::time_limit;
+        //utility::gl_color(Vector3f(1-rt, 0 ,rt));
     }
     else
     {

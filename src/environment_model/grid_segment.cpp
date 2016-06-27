@@ -764,7 +764,7 @@ void grid_segment::draw()
     glLineWidth(2);
     utility::gl_color(get_color());
 
-    if(true || active_survey_param::non_ros::cell_drawing_mode==5)
+    if(active_survey_param::non_ros::cell_drawing_mode!=2)
     {
         if(convexhull_.size() >= 3)
         {

@@ -115,11 +115,11 @@ void mav::draw()
     }
     glEnd();
 
-    glPushAttrib(GL_ENABLE_BIT);
-    glLineStipple(1, 0x5F);
-    glEnable(GL_LINE_STIPPLE);
+//    glPushAttrib(GL_ENABLE_BIT);
+//    glLineStipple(1, 0x5F);
+//    glEnable(GL_LINE_STIPPLE);
 
-    glLineWidth(4);
+    glLineWidth(3);
     glColor3f(1, 0.4, 0.4);
 
     glBegin(GL_LINES);
@@ -152,7 +152,7 @@ void mav::draw()
         }
     }
     glEnd();
-    glPopAttrib();
+   // glPopAttrib();
 
 
     glColor3f(1,1,0);
